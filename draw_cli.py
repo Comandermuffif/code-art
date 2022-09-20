@@ -1,8 +1,8 @@
 """Draw
 
 Usage:
-  draw.py [options] circle <max-size> <count>
-  draw.py [options] triangle <count>
+  draw_cli.py [options] circle <max-size> <count>
+  draw_cli.py [options] triangle <count>
 
 Options:
   -h --help                   Show this screen
@@ -33,15 +33,16 @@ class FromCenterColor(object):
     return colorsys.hsv_to_rgb(hue * random.gauss(1, self.divergance), 1, 1)
 
 class FromTopLeftColor(object):
-  max_distance = math.sqrt(2)
+  max_distance = 2
 
   def __init__(self, divergance=0.35):
     self.divergance = divergance
 
   def get_color(self, x:float, y:float):
-    distance_from_corner = math.sqrt(math.pow(x, 2) + math.pow(y, 2))
+    distance_from_corner = x + y
     hue = distance_from_corner/FromTopLeftColor.max_distance
-    return colorsys.hsv_to_rgb(hue * random.gauss(1, self.divergance), 1, 1)
+    hue = min(1, max(0, hue + (random.random() - 0.5) * self.divergance))
+    return colorsys.hsv_to_rgb(hue, 1, 1)
 
 def draw_circles(surface:cairo.ImageSurface, color_class:object,  max_size:float, count:int):
   context = cairo.Context(surface)
