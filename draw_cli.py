@@ -22,7 +22,7 @@ import random
 import string
 
 class FromCenterColor(object):
-  max_distance = math.sqrt(math.pow(-0.5, 2) + math.pow(-0.5, 2))
+  max_distance = math.sqrt(math.pow(-0.5, 2) + math.pow(-0.5, 2)) 
 
   def __init__(self, divergance=0.35):
     self.divergance = divergance
@@ -39,10 +39,46 @@ class FromTopLeftColor(object):
     self.divergance = divergance
 
   def get_color(self, x:float, y:float):
+    colors = [
+      hex_to_rgb("8D3123"),
+      hex_to_rgb("CC5404"),
+      hex_to_rgb("F5BD25"),
+      hex_to_rgb("FB7C1C"),
+      hex_to_rgb("D65027"),
+      hex_to_rgb("632718"),
+    ]
+    return self.get_color_bucketed(x, y, colors)
+  
+  def get_color_bucketed(self, x:float, y:float, colors:list=[(1,0,0), (0,1,0), (0,0,1)]):
+    buckets = len(colors)
+    bucket_width = FromTopLeftColor.max_distance/buckets
+    color_prob = []
+    for i in range(buckets):
+      color_prob.append(None)
+
+    for i in range(buckets):
+      color_prob[i] = abs(random.normalvariate(bucket_width * (i + 0.5), 1/buckets)  - (x + y))
+
+    max_prob = min(color_prob)
+    for i in range(buckets):
+      if max_prob == color_prob[i]:
+        return colors[i]
+    return (0, 0, 0)
+
+  def get_color_gradient(self, x:float, y:float, min_hue:float=0.16, max_hue:float=0.3):
     distance_from_corner = x + y
     hue = distance_from_corner/FromTopLeftColor.max_distance
     hue = min(1, max(0, hue + (random.random() - 0.5) * self.divergance))
+    hue = ((max_hue - min_hue) * hue) + min_hue
     return colorsys.hsv_to_rgb(hue, 1, 1)
+
+def hex_to_rgb(hex:str):
+  hex = int(hex, 16)
+  return (
+    ((hex >> 16) & 0xFF)/255,
+    ((hex >> 8) & 0xFF)/255,
+    ((hex >> 0) & 0xFF)/255,
+  )
 
 def draw_circles(surface:cairo.ImageSurface, color_class:object,  max_size:float, count:int):
   context = cairo.Context(surface)
