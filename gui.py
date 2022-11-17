@@ -15,7 +15,14 @@ import tkinter
 
 from PIL import Image, ImageTk
 
-if __name__ == '__main__':
+def get_image(surface: cairo.ImageSurface, context:cairo.Context) -> ImageTk.PhotoImage:    
+    context.set_source_rgb(random.random(), random.random(), random.random())
+    context.arc(512, 512, 50, 0, 360)
+    context.fill()
+    data = Image.frombuffer("RGBA", (surface.get_width(), surface.get_height()), surface.get_data().tobytes(), "raw", "BGRA", 0, 1)
+    return ImageTk.PhotoImage(data)
+
+def main():
     arguments = docopt.docopt(__doc__, version='v0.0.0')
     window = tkinter.Tk()
 
@@ -29,42 +36,22 @@ if __name__ == '__main__':
 
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
     context = cairo.Context(surface)
-    context.set_source_rgb(random.random(), random.random(), random.random())
-    context.arc(512, 512, 50, 0, 360)
-    context.fill()
-    data = Image.frombuffer("RGBA", (width, height), surface.get_data().tobytes(), "raw", "BGRA", 0, 1)
-    generated_image_a = ImageTk.PhotoImage(data)
-
-    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-    context = cairo.Context(surface)
-    context.set_source_rgb(random.random(), random.random(), random.random())
-    context.arc(512, 512, 50, 0, 360)
-    context.fill()
-    data = Image.frombuffer("RGBA", (width, height), surface.get_data().tobytes(), "raw", "BGRA", 0, 1)
-    generated_image_b = ImageTk.PhotoImage(data)
 
     settings = {
-      "a_side": True,
-      "a_image": generated_image_a,
-      "b_image": generated_image_b,
+      "a": get_image(surface, context),
+      "b": get_image(surface, context),
     }
+    settings["current_image"] = settings["a"]
 
     def gen_callback():
         print("Button start")
-        settings["a_side"] = not settings["a_side"]
-        if settings["a_side"]:
-          image_label.config(image=generated_image_a)
-        else:
-          image_label.config(image=generated_image_b)
+        settings["current_image"] = settings["b"] if settings["current_image"] == settings["a"] else settings["a"]
+        image_label.config(image=settings["current_image"])
         print("Button end")
 
     gen_button = tkinter.Button(window, text="Generate", command=gen_callback)
 
-    settings["a_side"] = not settings["a_side"]
-    if settings["a_side"]:
-      image_label.config(image=generated_image_a)
-    else:
-      image_label.config(image=generated_image_b)
+    image_label.config(image=settings["current_image"])
 
     min_hue.pack()
     max_hue.pack()
@@ -72,3 +59,6 @@ if __name__ == '__main__':
     image_label.pack(expand=True, fill="both")
 
     window.mainloop()
+
+if __name__ == '__main__':
+    main()
