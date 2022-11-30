@@ -7,14 +7,20 @@ Options:
   -h --help                   Show this screen
 
 """
-import math
 import random
 import cairo
 import docopt
 import tkinter
 import tkinter.colorchooser
+import inspect
+
+from abc import abstractclassmethod
 
 from PIL import Image, ImageTk
+
+class DrawModes():
+    random = "random"
+    bucketed = "bucketed"
 
 class FloatColor():
     def __init__(self, r:float, g:float, b:float):
@@ -38,9 +44,14 @@ class ColorBar(tkinter.Frame):
         self.clear_colors_button = tkinter.Button(self, text="Clear Colors", command=self.clear_colors)
         self.clear_colors_button.grid(column=0, row=1)
 
-    def add_color(self):
-        chosen_color = tkinter.colorchooser.askcolor()
-        new_color = FloatColor(*(x/255 for x in chosen_color[0]))
+        self.add_color(FloatColor(1, 0, 0))
+        self.add_color(FloatColor(0, 1, 0))
+        self.add_color(FloatColor(0, 0, 1))
+
+    def add_color(self, new_color:FloatColor=None):
+        if not new_color:
+            chosen_color = tkinter.colorchooser.askcolor()
+            new_color = FloatColor(*(x/255 for x in chosen_color[0]))
         self.colors.append(new_color)
 
         color_label = tkinter.Label(self, background=new_color.to_hex(), width=2, height=1)
@@ -61,6 +72,56 @@ class OptionsWindow(tkinter.Toplevel):
 
         self.color_bar = ColorBar(self)
         self.color_bar.grid(column=1, row=0, columnspan=9)
+
+        modes = [x[0] for x in inspect.getmembers(DrawModes, lambda a:not(inspect.isroutine(a))) if not(x[0].startswith('__') and x[0].endswith('__'))]
+        self.current_mode = tkinter.StringVar(self, modes[0])
+        self.mode_selector = tkinter.OptionMenu(self, self.current_mode, *modes)
+        self.mode_selector.grid(column=0, row=1)
+
+        self.count_text = tkinter.Text(self, height=1)
+        self.count_text.grid(column=1, row=2)
+
+        self.max_text = tkinter.Text(self, height=1)
+        self.max_text.grid(column=1, row=3)
+
+        self.obj_count = 500
+        self.obj_max_size = 50
+
+class ColorSelector(object):
+    @abstractclassmethod
+    def get_color(x:float, y:float, colors:list[FloatColor]):
+        pass
+
+    @abstractclassmethod
+    def get_color(colors:list[FloatColor]):
+        pass
+
+class RandomColorSelector(ColorSelector):
+    @classmethod
+    def get_color(cls, colors:list[FloatColor]):
+        return random.choice(colors)
+
+class BucketedColor(ColorSelector):
+    max_distance = 2
+
+    @classmethod
+    def get_color(cls, x:float, y:float, colors:list[FloatColor], divergance:float=0.15):
+        buckets = len(colors)
+        bucket_width = cls.max_distance/buckets
+        color_prob = []
+
+        for i in range(buckets):
+            color_prob.append(None)
+
+        for i in range(buckets):
+            color_prob[i] = abs(random.normalvariate(bucket_width * (i + 0.5), divergance)  - (x + y))
+
+        max_prob = min(color_prob)
+        for i in range(buckets):
+            if max_prob == color_prob[i]:
+                return colors[i]
+        return (0, 0, 0)
+
 
 class DrawUI(tkinter.Tk):
     def __init__(self, *args, **kwargs):
@@ -84,8 +145,6 @@ class DrawUI(tkinter.Tk):
         self.options_window.geometry("400x400")
         self.options_window.withdraw()
 
-        # self.draw()
-
     def open_options(self):
         self.options_window.deiconify()
 
@@ -93,19 +152,39 @@ class DrawUI(tkinter.Tk):
         if self.image:
             self.image.destroy()
 
-        for c in range(500):
-            x = random.randint(0, self.width)
-            y = random.randint(0, self.height)
-            radious = random.randint(0, 100)
-
-            color = random.choice(self.options_window.color_bar.colors)
-            self.context.set_source_rgb(color.r, color.g, color.b)
-            self.context.arc(x, y, radious, 0, 360)
-            self.context.fill()
+        {
+            DrawModes.random: self._draw_random,
+            DrawModes.bucketed: self._draw_bucketed,
+        }[self.options_window.current_mode.get()]()
 
         self._image_ref = ImageTk.PhotoImage(Image.frombuffer("RGBA", (self.width, self.height), self.surface.get_data().tobytes(), "raw", "BGRA", 0, 1))
         self.image = tkinter.Label(self, image=self._image_ref)
         self.image.grid(column=0, row=1, columnspan=10, rowspan=9)
+
+    def _draw_random(self):
+        # TODO: Clear the image
+        for _ in range(self.options_window.obj_count):
+            x = random.randint(0, self.width)
+            y = random.randint(0, self.height)
+            
+            color = RandomColorSelector.get_color(self.options_window.color_bar.colors)
+            self.context.set_source_rgb(color.r, color.g, color.b)
+
+            radious = random.randint(0, self.options_window.obj_max_size)
+            self.context.arc(x, y, radious, 0, 360)
+            self.context.fill()
+
+    def _draw_bucketed(self):
+        for _ in range(self.options_window.obj_count):
+            x_float = random.random()
+            y_float = random.random()
+
+            color = BucketedColor.get_color(x_float, y_float, self.options_window.color_bar.colors)
+            self.context.set_source_rgb(color.r, color.g, color.b)
+
+            radious = random.randint(0, self.options_window.obj_max_size)
+            self.context.arc(x_float * self.width, y_float * self.height, radious, 0, 360)
+            self.context.fill()
 
 def main():
     arguments = docopt.docopt(__doc__, version='v0.0.0')

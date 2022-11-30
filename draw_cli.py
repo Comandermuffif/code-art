@@ -33,18 +33,19 @@ class FromCenterColor(object):
     return colorsys.hsv_to_rgb(hue * random.gauss(1, self.divergance), 1, 1)
 
 class FromTopLeftColor(object):
-  max_distance = 2  
+  max_distance = 2
 
   def __init__(self, divergance=0.15):
     self.divergance = divergance
 
   def get_color(self, x:float, y:float):
     colors = [
-      hex_to_rgb("8EB1C7"),
       hex_to_rgb("B02E0C"),
       hex_to_rgb("EB4511"),
-      hex_to_rgb("C1BFB5"),
-      hex_to_rgb("FEFDFF"),
+      hex_to_rgb("E6EFF8"),
+      hex_to_rgb("FFFFFF"),
+      hex_to_rgb("4E7934"),
+      hex_to_rgb("1A4709"),
     ]
     # return self.random_color(colors)
     return self.get_color_bucketed(x, y, colors)
