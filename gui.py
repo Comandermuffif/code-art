@@ -38,11 +38,11 @@ class ColorBar(tkinter.Frame):
         self.colors = list[FloatColor]()
         self.color_labels = list[tkinter.Label]()
 
-        self.add_color_button = tkinter.Button(self, text="Add Color", command=self.add_color)
-        self.add_color_button.grid(column=0, row=0)
+        tkinter.Button(self, text="Add Color", command=self.add_color).grid(column=0, row=0)
+        tkinter.Button(self, text="Clear Colors", command=self.clear_colors).grid(column=0, row=1)
 
-        self.clear_colors_button = tkinter.Button(self, text="Clear Colors", command=self.clear_colors)
-        self.clear_colors_button.grid(column=0, row=1)
+        self.colors_section = tkinter.Frame(self)
+        self.colors_section.grid(column=1, row=0, rowspan=2)
 
         self.add_color(FloatColor(1, 0, 0))
         self.add_color(FloatColor(0, 1, 0))
@@ -54,8 +54,8 @@ class ColorBar(tkinter.Frame):
             new_color = FloatColor(*(x/255 for x in chosen_color[0]))
         self.colors.append(new_color)
 
-        color_label = tkinter.Label(self, background=new_color.to_hex(), width=2, height=1)
-        color_label.grid(column=len(self.color_labels) + 1, row=0, rowspan=2)
+        color_label = tkinter.Label(self.colors_section, background=new_color.to_hex(), width=2, height=1)
+        color_label.grid(column=len(self.color_labels) + 1, row=0)
 
         self.color_labels.append(color_label)
 
@@ -70,18 +70,26 @@ class OptionsWindow(tkinter.Toplevel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Row 0
+        tkinter.Label(self, text="Colors:").grid(column=0, row=0)
         self.color_bar = ColorBar(self)
-        self.color_bar.grid(column=1, row=0, columnspan=9)
+        self.color_bar.grid(column=1, row=0)
 
+        # Row 1
+        tkinter.Label(self, text="Mode:").grid(column=0, row=1)
         modes = [x[0] for x in inspect.getmembers(DrawModes, lambda a:not(inspect.isroutine(a))) if not(x[0].startswith('__') and x[0].endswith('__'))]
         self.current_mode = tkinter.StringVar(self, modes[0])
         self.mode_selector = tkinter.OptionMenu(self, self.current_mode, *modes)
-        self.mode_selector.grid(column=0, row=1)
+        self.mode_selector.grid(column=1, row=1)
 
-        self.count_text = tkinter.Text(self, height=1)
+        # Row 2
+        tkinter.Label(self, text="Count:").grid(column=0, row=2)
+        self.count_text = tkinter.Text(self, height=1, width=3)
         self.count_text.grid(column=1, row=2)
 
-        self.max_text = tkinter.Text(self, height=1)
+        # Row 3
+        tkinter.Label(self, text="Max Size:").grid(column=0, row=3)
+        self.max_text = tkinter.Text(self, height=1, width=3)
         self.max_text.grid(column=1, row=3)
 
         self.obj_count = 500
@@ -128,11 +136,15 @@ class DrawUI(tkinter.Tk):
         super().__init__(*args, **kwargs)
         self.width, self.height = 1024, 1024
 
-        self.geometry("{}x{}".format(self.width, self.height))
+        self.geometry("{}x{}".format(self.width + 50, self.height + 50))
 
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
         self.context = cairo.Context(self.surface)
         self.image:tkinter.Label = None
+
+        self.context.set_source_rgb(0, 0, 0)
+        self.context.rectangle(0, 0, self.width, self.height)
+        self.context.fill()
 
         self.generate_button = tkinter.Button(self, text="Generate", command=self.draw)
         self.generate_button.grid(column=0, row=0)
@@ -148,6 +160,11 @@ class DrawUI(tkinter.Tk):
     def open_options(self):
         self.options_window.deiconify()
 
+    def _set_image(self):
+        self._image_ref = ImageTk.PhotoImage(Image.frombuffer("RGBA", (self.width, self.height), self.surface.get_data().tobytes(), "raw", "BGRA", 0, 1))
+        self.image = tkinter.Label(self, image=self._image_ref)
+        self.image.grid(column=0, row=1, columnspan=10, rowspan=9)
+
     def draw(self):
         if self.image:
             self.image.destroy()
@@ -157,9 +174,7 @@ class DrawUI(tkinter.Tk):
             DrawModes.bucketed: self._draw_bucketed,
         }[self.options_window.current_mode.get()]()
 
-        self._image_ref = ImageTk.PhotoImage(Image.frombuffer("RGBA", (self.width, self.height), self.surface.get_data().tobytes(), "raw", "BGRA", 0, 1))
-        self.image = tkinter.Label(self, image=self._image_ref)
-        self.image.grid(column=0, row=1, columnspan=10, rowspan=9)
+        self._set_image()
 
     def _draw_random(self):
         # TODO: Clear the image
