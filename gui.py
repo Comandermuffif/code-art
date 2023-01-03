@@ -14,7 +14,7 @@ import string
 import cairo
 import docopt
 import tkinter
-from draw_modes.bucketed import BucketedDrawMode, BucketedRandomDrawMode
+from draw_modes.bucketed import BucketedDrawMode
 from draw_modes.gradient import GradientDrawMode
 from draw_modes.random import RandomDrawMode
 
@@ -38,7 +38,6 @@ class OptionsFrame(tkinter.Frame):
         self.modes = {
             x.get_name(): x for x in [
                 GradientDrawMode(),
-                BucketedRandomDrawMode(),
                 BucketedDrawMode(),
                 RandomDrawMode(),
             ]
@@ -52,9 +51,9 @@ class OptionsFrame(tkinter.Frame):
         self._mode_selector = tkinter.OptionMenu(self, self.current_mode_key, *mode_keys)
         self._mode_selector.grid(column=1, row=1)
 
-        tkinter.Label(self, text="Mode Options:").grid(column=0, row=2)
+        tkinter.Label(self, text="Mode Options:").grid(column=0, row=2, columnspan=2)
         self._mode_options_frame = tkinter.Frame(self)
-        self._mode_options_frame.grid(column=1, row=2)
+        self._mode_options_frame.grid(column=0, row=3, columnspan=2)
         self._mode_settings_entry = {}
 
         self._mode_changed()
