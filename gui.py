@@ -46,7 +46,7 @@ class OptionsFrame(tkinter.Frame):
         mode_keys = list(self.modes.keys())
 
         self.current_mode_key = tkinter.StringVar(self, mode_keys[0])
-        self.current_mode_key.trace("w", self._mode_changed)
+        self.current_mode_key.trace_add("write", self._mode_changed)
 
         self._mode_selector = tkinter.OptionMenu(self, self.current_mode_key, *mode_keys)
         self._mode_selector.grid(column=1, row=1)
@@ -74,7 +74,8 @@ class OptionsFrame(tkinter.Frame):
         }
 
     def _mode_changed(self, *args, **kwargs):
-        for child in self._mode_options_frame.children.values():
+        children = list(self._mode_options_frame.children.values())
+        for child in children:
             child.destroy()
 
         mode = self.modes[self.get_mode()]
