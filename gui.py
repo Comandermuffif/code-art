@@ -8,13 +8,13 @@ Options:
 
 """
 from __future__ import annotations
+import math
 
 import random
 import string
 import cairo
 import docopt
 import tkinter
-import tkinter.colorchooser
 import inspect
 
 from abc import abstractclassmethod
@@ -24,6 +24,7 @@ from PIL import Image, ImageTk
 class DrawModes():
     random = "random"
     bucketed = "bucketed"
+    gradient = "gradient"
 
 class FloatColor():
     def __init__(self, r:float, g:float, b:float):
@@ -34,6 +35,27 @@ class FloatColor():
     def to_hex(self):
         hex(int(self.g * 255))
         return "#{:02x}{:02x}{:02x}".format(int(self.r * 255), int(self.g * 255), int(self.b * 255)).upper()
+
+    def __add__(self, other:FloatColor):
+        return FloatColor(
+            self.r + other.r,
+            self.g + other.g,
+            self.b + other.b,
+        )
+
+    def __sub__(self, other:FloatColor):
+        return FloatColor(
+            self.r - other.r,
+            self.g - other.g,
+            self.b - other.b,
+        )
+
+    def __mul__(self, y:float):
+        return FloatColor(
+            self.r * y,
+            self.g * y,
+            self.b * y,
+        )
 
     @classmethod
     def from_hex(cls, input:str) -> FloatColor:
@@ -58,6 +80,8 @@ class OptionsFrame(tkinter.Frame):
         self._mode_selector = tkinter.OptionMenu(self, self.current_mode, *modes)
         self._mode_selector.grid(column=1, row=1)
 
+        self.current_mode.trace("w", self._mode_changed)
+
         # Row 2
         tkinter.Label(self, text="Count:").grid(column=0, row=2)
         self._count_entry = tkinter.Entry(self)
@@ -69,6 +93,12 @@ class OptionsFrame(tkinter.Frame):
         self._max_entry = tkinter.Entry(self)
         self._max_entry.grid(column=1, row=3)
         self._max_entry.insert(tkinter.END, "50")
+
+        tkinter.Label(self, text="Extra Options:").grid(column=0, row=4)
+        self._extra_options_frame = tkinter.Frame(self)
+        self._extra_options_frame.grid(column=1, row=4)
+
+        self._extra_options = dict[str, tkinter.BaseWidget]()
 
     def get_mode(self) -> str:
         return self.current_mode.get()
@@ -83,6 +113,26 @@ class OptionsFrame(tkinter.Frame):
         return [
             FloatColor.from_hex(x) for x in self._color_entry.get().split(',')
         ]
+
+    def get_extra_options(self):
+        return self._extra_options
+
+    def _mode_changed(self, *args, **kwargs):
+        if self.current_mode.get() == DrawModes.gradient:
+            label = tkinter.Label(self._extra_options_frame, text="Gradient Steps:")
+            entry = tkinter.Entry(self._extra_options_frame)
+            entry.insert(tkinter.END, "1")
+
+            label.grid(column=0)
+            entry.grid(column=1)
+
+            self._extra_options["gradient_label"] = label
+            self._extra_options["gradient_entry"] = entry
+        else:
+            if "gradient_label" in self._extra_options.keys():
+                self._extra_options.pop("gradient_label").destroy()
+            if "gradient_entry" in self._extra_options.keys():
+                self._extra_options.pop("gradient_entry").destroy()
 
 class ColorSelector(object):
     @abstractclassmethod
@@ -119,6 +169,25 @@ class BucketedColor(ColorSelector):
                 return colors[i]
         return (0, 0, 0)
 
+class GradientColor(object):
+    @classmethod
+    def get_subcolors(cls, colors:list[FloatColor], subcount:int) -> list[FloatColor]:
+        full_colors = list()
+
+        for i in range(len(colors) - 1):
+            current_color = colors[i]
+            full_colors.append(current_color)
+
+            next_color = colors[i + 1]
+
+            color_delta = next_color - current_color
+
+            for j in range(subcount):
+                full_colors.append(current_color + (color_delta * ((j + 1) / (subcount + 1))))
+
+        full_colors.append(colors[-1])
+
+        return full_colors
 
 class DrawUI(tkinter.Tk):
     def __init__(self, *args, **kwargs):
@@ -170,6 +239,7 @@ class DrawUI(tkinter.Tk):
         {
             DrawModes.random: self._draw_random,
             DrawModes.bucketed: self._draw_bucketed,
+            DrawModes.gradient: self._draw_gradient,
         }[self._options.get_mode()]()
 
         self._set_image()
@@ -187,14 +257,34 @@ class DrawUI(tkinter.Tk):
             self.context.fill()
 
     def _draw_bucketed(self):
+        colors = self._options.get_colors()
+        max_size = self._options.get_max_size()
+
         for _ in range(self._options.get_count()):
             x_float = random.random()
             y_float = random.random()
 
-            color = BucketedColor.get_color(x_float, y_float, self._options.get_colors())
+            color = BucketedColor.get_color(x_float, y_float, colors)
             self.context.set_source_rgb(color.r, color.g, color.b)
 
-            radious = random.randint(0, self._options.get_max_size())
+            radious = random.randint(0, max_size)
+            self.context.arc(x_float * self.width, y_float * self.height, radious, 0, 360)
+            self.context.fill()
+
+    def _draw_gradient(self):
+        base_colors = self._options.get_colors()
+        subcount = int(self._options.get_extra_options()["gradient_entry"].get())
+        full_colors = GradientColor.get_subcolors(base_colors, subcount)
+        max_size = self._options.get_max_size()
+
+        for _ in range(self._options.get_count()):
+            x_float = random.random()
+            y_float = random.random()
+
+            color = BucketedColor.get_color(x_float, y_float, full_colors)
+            self.context.set_source_rgb(color.r, color.g, color.b)
+
+            radious = random.randint(0, max_size)
             self.context.arc(x_float * self.width, y_float * self.height, radious, 0, 360)
             self.context.fill()
 
