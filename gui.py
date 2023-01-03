@@ -41,7 +41,7 @@ class FloatColor():
         parts = tuple(int(input[i:i+2], 16) for i in (0, 2, 4))
         return FloatColor(parts[0]/255, parts[1]/255, parts[2]/255)
 
-class OptionsWindow(tkinter.Toplevel):
+class OptionsFrame(tkinter.Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -136,19 +136,21 @@ class DrawUI(tkinter.Tk):
         self.generate_button = tkinter.Button(self, text="Generate", command=self.draw)
         self.generate_button.grid(column=0, row=0)
 
-        self.options_button = tkinter.Button(self, text="Options", command=self.open_options)
+        self.options_button = tkinter.Button(self, text="Options", command=self.toggle_options)
         self.options_button.grid(column=1, row=0)
 
         tkinter.Button(self, text="Clear", command=self._clear_image).grid(column=2, row=0)
         tkinter.Button(self, text="Save", command=self._save_image).grid(column=3, row=0)
 
-        self.options_window = OptionsWindow(self)
-        self.options_window.title("Options")
-        self.options_window.geometry("400x400")
-        self.options_window.withdraw()
+        self._options = OptionsFrame(self)
+        self._options.grid(column=0, row=1, columnspan=10)
+        self._options.grid_remove()
 
-    def open_options(self):
-        self.options_window.deiconify()
+    def toggle_options(self):
+        if len(self._options.grid_info()) == 0:
+            self._options.grid()
+        else:
+            self._options.grid_remove()
 
     def _clear_image(self):
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
@@ -159,7 +161,7 @@ class DrawUI(tkinter.Tk):
     def _set_image(self):
         self._image_ref = ImageTk.PhotoImage(Image.frombuffer("RGBA", (self.width, self.height), self.surface.get_data().tobytes(), "raw", "BGRA", 0, 1))
         self.image = tkinter.Label(self, image=self._image_ref)
-        self.image.grid(column=0, row=1, columnspan=10, rowspan=9)
+        self.image.grid(column=0, row=2, columnspan=10, rowspan=9)
 
     def draw(self):
         if self.image:
@@ -168,36 +170,36 @@ class DrawUI(tkinter.Tk):
         {
             DrawModes.random: self._draw_random,
             DrawModes.bucketed: self._draw_bucketed,
-        }[self.options_window.get_mode()]()
+        }[self._options.get_mode()]()
 
         self._set_image()
 
     def _draw_random(self):
-        for _ in range(self.options_window.get_count()):
+        for _ in range(self._options.get_count()):
             x = random.randint(0, self.width)
             y = random.randint(0, self.height)
             
-            color = RandomColorSelector.get_color(self.options_window.get_colors())
+            color = RandomColorSelector.get_color(self._options.get_colors())
             self.context.set_source_rgb(color.r, color.g, color.b)
 
-            radious = random.randint(0, self.options_window.get_max_size())
+            radious = random.randint(0, self._options.get_max_size())
             self.context.arc(x, y, radious, 0, 360)
             self.context.fill()
 
     def _draw_bucketed(self):
-        for _ in range(self.options_window.get_count()):
+        for _ in range(self._options.get_count()):
             x_float = random.random()
             y_float = random.random()
 
-            color = BucketedColor.get_color(x_float, y_float, self.options_window.get_colors())
+            color = BucketedColor.get_color(x_float, y_float, self._options.get_colors())
             self.context.set_source_rgb(color.r, color.g, color.b)
 
-            radious = random.randint(0, self.options_window.get_max_size())
+            radious = random.randint(0, self._options.get_max_size())
             self.context.arc(x_float * self.width, y_float * self.height, radious, 0, 360)
             self.context.fill()
 
     def _save_image(self):
-        name = self.options_window.get_mode()
+        name = self._options.get_mode()
         suffix = ''.join(random.choice(string.ascii_lowercase+string.digits) for _ in range(8))
         self.surface.write_to_png(f"generated/{name}_{suffix}.png")
 
