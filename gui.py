@@ -8,6 +8,7 @@ Options:
 
 """
 import random
+import string
 import cairo
 import docopt
 import tkinter
@@ -142,15 +143,16 @@ class DrawUI(tkinter.Tk):
         self.context = cairo.Context(self.surface)
         self.image:tkinter.Label = None
 
-        self.context.set_source_rgb(0, 0, 0)
-        self.context.rectangle(0, 0, self.width, self.height)
-        self.context.fill()
+        self._clear_image()
 
         self.generate_button = tkinter.Button(self, text="Generate", command=self.draw)
         self.generate_button.grid(column=0, row=0)
 
         self.options_button = tkinter.Button(self, text="Options", command=self.open_options)
         self.options_button.grid(column=1, row=0)
+
+        tkinter.Button(self, text="Clear", command=self._clear_image).grid(column=2, row=0)
+        tkinter.Button(self, text="Save", command=self._save_image).grid(column=3, row=0)
 
         self.options_window = OptionsWindow(self)
         self.options_window.title("Options")
@@ -159,6 +161,15 @@ class DrawUI(tkinter.Tk):
 
     def open_options(self):
         self.options_window.deiconify()
+
+    def _clear_image(self):
+        self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
+        self.context = cairo.Context(self.surface)
+        # self.context.set_source_rgba(0, 0, 0, 0)
+        # self.context.rectangle(0, 0, self.width, self.height)
+        # self.context.fill()
+
+        self._set_image()
 
     def _set_image(self):
         self._image_ref = ImageTk.PhotoImage(Image.frombuffer("RGBA", (self.width, self.height), self.surface.get_data().tobytes(), "raw", "BGRA", 0, 1))
@@ -177,7 +188,6 @@ class DrawUI(tkinter.Tk):
         self._set_image()
 
     def _draw_random(self):
-        # TODO: Clear the image
         for _ in range(self.options_window.obj_count):
             x = random.randint(0, self.width)
             y = random.randint(0, self.height)
@@ -200,6 +210,11 @@ class DrawUI(tkinter.Tk):
             radious = random.randint(0, self.options_window.obj_max_size)
             self.context.arc(x_float * self.width, y_float * self.height, radious, 0, 360)
             self.context.fill()
+
+    def _save_image(self):
+        name = self.options_window.current_mode.get()
+        suffix = ''.join(random.choice(string.ascii_lowercase+string.digits) for _ in range(8))
+        self.surface.write_to_png(f"generated/{name}_{suffix}.png")
 
 def main():
     arguments = docopt.docopt(__doc__, version='v0.0.0')
