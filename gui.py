@@ -7,6 +7,8 @@ Options:
   -h --help                   Show this screen
 
 """
+from __future__ import annotations
+
 import random
 import string
 import cairo
@@ -33,39 +35,11 @@ class FloatColor():
         hex(int(self.g * 255))
         return "#{:02x}{:02x}{:02x}".format(int(self.r * 255), int(self.g * 255), int(self.b * 255)).upper()
 
-class ColorBar(tkinter.Frame):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.colors = list[FloatColor]()
-        self.color_labels = list[tkinter.Label]()
-
-        tkinter.Button(self, text="Add Color", command=self.add_color).grid(column=0, row=0)
-        tkinter.Button(self, text="Clear Colors", command=self.clear_colors).grid(column=0, row=1)
-
-        self.colors_section = tkinter.Frame(self)
-        self.colors_section.grid(column=1, row=0, rowspan=2)
-
-        self.add_color(FloatColor(1, 0, 0))
-        self.add_color(FloatColor(0, 1, 0))
-        self.add_color(FloatColor(0, 0, 1))
-
-    def add_color(self, new_color:FloatColor=None):
-        if not new_color:
-            chosen_color = tkinter.colorchooser.askcolor()
-            new_color = FloatColor(*(x/255 for x in chosen_color[0]))
-        self.colors.append(new_color)
-
-        color_label = tkinter.Label(self.colors_section, background=new_color.to_hex(), width=2, height=1)
-        color_label.grid(column=len(self.color_labels) + 1, row=0)
-
-        self.color_labels.append(color_label)
-
-    def clear_colors(self):
-        for label in self.color_labels:
-            label.destroy()
-
-        self.colors.clear()
-        self.color_labels.clear()
+    @classmethod
+    def from_hex(cls, input:str) -> FloatColor:
+        input = input.strip().strip('#')
+        parts = tuple(int(input[i:i+2], 16) for i in (0, 2, 4))
+        return FloatColor(parts[0]/255, parts[1]/255, parts[2]/255)
 
 class OptionsWindow(tkinter.Toplevel):
     def __init__(self, *args, **kwargs):
@@ -73,28 +47,42 @@ class OptionsWindow(tkinter.Toplevel):
 
         # Row 0
         tkinter.Label(self, text="Colors:").grid(column=0, row=0)
-        self.color_bar = ColorBar(self)
-        self.color_bar.grid(column=1, row=0)
+        self._color_entry = tkinter.Entry(self)
+        self._color_entry.grid(column=1, row=0)
+        self._color_entry.insert(tkinter.END, "FF0000, 00FF00, 0000FF")
 
         # Row 1
         tkinter.Label(self, text="Mode:").grid(column=0, row=1)
         modes = [x[0] for x in inspect.getmembers(DrawModes, lambda a:not(inspect.isroutine(a))) if not(x[0].startswith('__') and x[0].endswith('__'))]
         self.current_mode = tkinter.StringVar(self, modes[0])
-        self.mode_selector = tkinter.OptionMenu(self, self.current_mode, *modes)
-        self.mode_selector.grid(column=1, row=1)
+        self._mode_selector = tkinter.OptionMenu(self, self.current_mode, *modes)
+        self._mode_selector.grid(column=1, row=1)
 
         # Row 2
         tkinter.Label(self, text="Count:").grid(column=0, row=2)
-        self.count_text = tkinter.Text(self, height=1, width=3)
-        self.count_text.grid(column=1, row=2)
+        self._count_entry = tkinter.Entry(self)
+        self._count_entry.grid(column=1, row=2)
+        self._count_entry.insert(tkinter.END, "500")
 
         # Row 3
         tkinter.Label(self, text="Max Size:").grid(column=0, row=3)
-        self.max_text = tkinter.Text(self, height=1, width=3)
-        self.max_text.grid(column=1, row=3)
+        self._max_entry = tkinter.Entry(self)
+        self._max_entry.grid(column=1, row=3)
+        self._max_entry.insert(tkinter.END, "50")
 
-        self.obj_count = 500
-        self.obj_max_size = 50
+    def get_mode(self) -> str:
+        return self.current_mode.get()
+
+    def get_count(self) -> int:
+        return int(self._count_entry.get())
+
+    def get_max_size(self) -> int:
+        return int(self._max_entry.get())
+
+    def get_colors(self) -> list[FloatColor]:
+        return [
+            FloatColor.from_hex(x) for x in self._color_entry.get().split(',')
+        ]
 
 class ColorSelector(object):
     @abstractclassmethod
@@ -165,9 +153,6 @@ class DrawUI(tkinter.Tk):
     def _clear_image(self):
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
         self.context = cairo.Context(self.surface)
-        # self.context.set_source_rgba(0, 0, 0, 0)
-        # self.context.rectangle(0, 0, self.width, self.height)
-        # self.context.fill()
 
         self._set_image()
 
@@ -183,36 +168,36 @@ class DrawUI(tkinter.Tk):
         {
             DrawModes.random: self._draw_random,
             DrawModes.bucketed: self._draw_bucketed,
-        }[self.options_window.current_mode.get()]()
+        }[self.options_window.get_mode()]()
 
         self._set_image()
 
     def _draw_random(self):
-        for _ in range(self.options_window.obj_count):
+        for _ in range(self.options_window.get_count()):
             x = random.randint(0, self.width)
             y = random.randint(0, self.height)
             
-            color = RandomColorSelector.get_color(self.options_window.color_bar.colors)
+            color = RandomColorSelector.get_color(self.options_window.get_colors())
             self.context.set_source_rgb(color.r, color.g, color.b)
 
-            radious = random.randint(0, self.options_window.obj_max_size)
+            radious = random.randint(0, self.options_window.get_max_size())
             self.context.arc(x, y, radious, 0, 360)
             self.context.fill()
 
     def _draw_bucketed(self):
-        for _ in range(self.options_window.obj_count):
+        for _ in range(self.options_window.get_count()):
             x_float = random.random()
             y_float = random.random()
 
-            color = BucketedColor.get_color(x_float, y_float, self.options_window.color_bar.colors)
+            color = BucketedColor.get_color(x_float, y_float, self.options_window.get_colors())
             self.context.set_source_rgb(color.r, color.g, color.b)
 
-            radious = random.randint(0, self.options_window.obj_max_size)
+            radious = random.randint(0, self.options_window.get_max_size())
             self.context.arc(x_float * self.width, y_float * self.height, radious, 0, 360)
             self.context.fill()
 
     def _save_image(self):
-        name = self.options_window.current_mode.get()
+        name = self.options_window.get_mode()
         suffix = ''.join(random.choice(string.ascii_lowercase+string.digits) for _ in range(8))
         self.surface.write_to_png(f"generated/{name}_{suffix}.png")
 
