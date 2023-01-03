@@ -8,60 +8,19 @@ Options:
 
 """
 from __future__ import annotations
-import math
 
 import random
 import string
 import cairo
 import docopt
 import tkinter
-import inspect
+from draw_modes.bucketed import BucketedDrawMode, BucketedRandomDrawMode
+from draw_modes.gradient import GradientDrawMode
+from draw_modes.random import RandomDrawMode
 
-from abc import abstractclassmethod
+from models import FloatColor
 
 from PIL import Image, ImageTk
-
-class DrawModes():
-    random = "random"
-    bucketed = "bucketed"
-    gradient = "gradient"
-
-class FloatColor():
-    def __init__(self, r:float, g:float, b:float):
-        self.r = r
-        self.g = g
-        self.b = b
-
-    def to_hex(self):
-        hex(int(self.g * 255))
-        return "#{:02x}{:02x}{:02x}".format(int(self.r * 255), int(self.g * 255), int(self.b * 255)).upper()
-
-    def __add__(self, other:FloatColor):
-        return FloatColor(
-            self.r + other.r,
-            self.g + other.g,
-            self.b + other.b,
-        )
-
-    def __sub__(self, other:FloatColor):
-        return FloatColor(
-            self.r - other.r,
-            self.g - other.g,
-            self.b - other.b,
-        )
-
-    def __mul__(self, y:float):
-        return FloatColor(
-            self.r * y,
-            self.g * y,
-            self.b * y,
-        )
-
-    @classmethod
-    def from_hex(cls, input:str) -> FloatColor:
-        input = input.strip().strip('#')
-        parts = tuple(int(input[i:i+2], 16) for i in (0, 2, 4))
-        return FloatColor(parts[0]/255, parts[1]/255, parts[2]/255)
 
 class OptionsFrame(tkinter.Frame):
     def __init__(self, *args, **kwargs):
@@ -71,123 +30,69 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Colors:").grid(column=0, row=0)
         self._color_entry = tkinter.Entry(self)
         self._color_entry.grid(column=1, row=0)
+        # ff0000,ffa500,ffff00,008000,0000ff,4b0082,ee82ee
         self._color_entry.insert(tkinter.END, "FF0000, 00FF00, 0000FF")
 
         # Row 1
-        tkinter.Label(self, text="Mode:").grid(column=0, row=1)
-        modes = [x[0] for x in inspect.getmembers(DrawModes, lambda a:not(inspect.isroutine(a))) if not(x[0].startswith('__') and x[0].endswith('__'))]
-        self.current_mode = tkinter.StringVar(self, modes[0])
-        self._mode_selector = tkinter.OptionMenu(self, self.current_mode, *modes)
+        tkinter.Label(self, text="Color Mode:").grid(column=0, row=1)
+        self.modes = {
+            x.get_name(): x for x in [
+                GradientDrawMode(),
+                BucketedRandomDrawMode(),
+                BucketedDrawMode(),
+                RandomDrawMode(),
+            ]
+        }
+
+        mode_keys = list(self.modes.keys())
+
+        self.current_mode_key = tkinter.StringVar(self, mode_keys[0])
+        self.current_mode_key.trace("w", self._mode_changed)
+
+        self._mode_selector = tkinter.OptionMenu(self, self.current_mode_key, *mode_keys)
         self._mode_selector.grid(column=1, row=1)
 
-        self.current_mode.trace("w", self._mode_changed)
+        tkinter.Label(self, text="Mode Options:").grid(column=0, row=2)
+        self._mode_options_frame = tkinter.Frame(self)
+        self._mode_options_frame.grid(column=1, row=2)
+        self._mode_settings_entry = {}
 
-        # Row 2
-        tkinter.Label(self, text="Count:").grid(column=0, row=2)
-        self._count_entry = tkinter.Entry(self)
-        self._count_entry.grid(column=1, row=2)
-        self._count_entry.insert(tkinter.END, "500")
-
-        # Row 3
-        tkinter.Label(self, text="Max Size:").grid(column=0, row=3)
-        self._max_entry = tkinter.Entry(self)
-        self._max_entry.grid(column=1, row=3)
-        self._max_entry.insert(tkinter.END, "50")
-
-        tkinter.Label(self, text="Extra Options:").grid(column=0, row=4)
-        self._extra_options_frame = tkinter.Frame(self)
-        self._extra_options_frame.grid(column=1, row=4)
-
-        self._extra_options = dict[str, tkinter.BaseWidget]()
+        self._mode_changed()
 
     def get_mode(self) -> str:
-        return self.current_mode.get()
-
-    def get_count(self) -> int:
-        return int(self._count_entry.get())
-
-    def get_max_size(self) -> int:
-        return int(self._max_entry.get())
+        return self.current_mode_key.get()
 
     def get_colors(self) -> list[FloatColor]:
         return [
             FloatColor.from_hex(x) for x in self._color_entry.get().split(',')
         ]
 
-    def get_extra_options(self):
-        return self._extra_options
+    def get_mode_settings(self):
+        return {
+            key: entry.get()
+            for (key, entry) in
+            self._mode_settings_entry.items()
+        }
 
     def _mode_changed(self, *args, **kwargs):
-        if self.current_mode.get() == DrawModes.gradient:
-            label = tkinter.Label(self._extra_options_frame, text="Gradient Steps:")
-            entry = tkinter.Entry(self._extra_options_frame)
-            entry.insert(tkinter.END, "1")
+        for child in self._mode_options_frame.children.values():
+            child.destroy()
 
-            label.grid(column=0)
-            entry.grid(column=1)
+        mode = self.modes[self.get_mode()]
+        self._mode_settings_entry = {}
 
-            self._extra_options["gradient_label"] = label
-            self._extra_options["gradient_entry"] = entry
-        else:
-            if "gradient_label" in self._extra_options.keys():
-                self._extra_options.pop("gradient_label").destroy()
-            if "gradient_entry" in self._extra_options.keys():
-                self._extra_options.pop("gradient_entry").destroy()
+        count = 0
 
-class ColorSelector(object):
-    @abstractclassmethod
-    def get_color(x:float, y:float, colors:list[FloatColor]):
-        pass
+        for (key, (name, type, default_value)) in mode.get_option_types().items():
+            label = tkinter.Label(self._mode_options_frame, text=name)
+            label.grid(row=count, column=0)
+            entry = tkinter.Entry(self._mode_options_frame)
+            entry.grid(row=count, column=1)
+            entry.insert(tkinter.END, default_value)
 
-    @abstractclassmethod
-    def get_color(colors:list[FloatColor]):
-        pass
+            self._mode_settings_entry[key] = entry
 
-class RandomColorSelector(ColorSelector):
-    @classmethod
-    def get_color(cls, colors:list[FloatColor]):
-        return random.choice(colors)
-
-class BucketedColor(ColorSelector):
-    max_distance = 2
-
-    @classmethod
-    def get_color(cls, x:float, y:float, colors:list[FloatColor], divergance:float=0.15):
-        buckets = len(colors)
-        bucket_width = cls.max_distance/buckets
-        color_prob = []
-
-        for i in range(buckets):
-            color_prob.append(None)
-
-        for i in range(buckets):
-            color_prob[i] = abs(random.normalvariate(bucket_width * (i + 0.5), divergance)  - (x + y))
-
-        max_prob = min(color_prob)
-        for i in range(buckets):
-            if max_prob == color_prob[i]:
-                return colors[i]
-        return (0, 0, 0)
-
-class GradientColor(object):
-    @classmethod
-    def get_subcolors(cls, colors:list[FloatColor], subcount:int) -> list[FloatColor]:
-        full_colors = list()
-
-        for i in range(len(colors) - 1):
-            current_color = colors[i]
-            full_colors.append(current_color)
-
-            next_color = colors[i + 1]
-
-            color_delta = next_color - current_color
-
-            for j in range(subcount):
-                full_colors.append(current_color + (color_delta * ((j + 1) / (subcount + 1))))
-
-        full_colors.append(colors[-1])
-
-        return full_colors
+            count = count + 1
 
 class DrawUI(tkinter.Tk):
     def __init__(self, *args, **kwargs):
@@ -236,57 +141,17 @@ class DrawUI(tkinter.Tk):
         if self.image:
             self.image.destroy()
 
-        {
-            DrawModes.random: self._draw_random,
-            DrawModes.bucketed: self._draw_bucketed,
-            DrawModes.gradient: self._draw_gradient,
-        }[self._options.get_mode()]()
+        mode_key = self._options.get_mode()
+        mode = self._options.modes[mode_key]
+        mode.draw(
+            self.context,
+            self._options.get_colors(),
+            width=self.width,
+            height=self.height,
+            **self._options.get_mode_settings(),
+        )
 
         self._set_image()
-
-    def _draw_random(self):
-        for _ in range(self._options.get_count()):
-            x = random.randint(0, self.width)
-            y = random.randint(0, self.height)
-            
-            color = RandomColorSelector.get_color(self._options.get_colors())
-            self.context.set_source_rgb(color.r, color.g, color.b)
-
-            radious = random.randint(0, self._options.get_max_size())
-            self.context.arc(x, y, radious, 0, 360)
-            self.context.fill()
-
-    def _draw_bucketed(self):
-        colors = self._options.get_colors()
-        max_size = self._options.get_max_size()
-
-        for _ in range(self._options.get_count()):
-            x_float = random.random()
-            y_float = random.random()
-
-            color = BucketedColor.get_color(x_float, y_float, colors)
-            self.context.set_source_rgb(color.r, color.g, color.b)
-
-            radious = random.randint(0, max_size)
-            self.context.arc(x_float * self.width, y_float * self.height, radious, 0, 360)
-            self.context.fill()
-
-    def _draw_gradient(self):
-        base_colors = self._options.get_colors()
-        subcount = int(self._options.get_extra_options()["gradient_entry"].get())
-        full_colors = GradientColor.get_subcolors(base_colors, subcount)
-        max_size = self._options.get_max_size()
-
-        for _ in range(self._options.get_count()):
-            x_float = random.random()
-            y_float = random.random()
-
-            color = BucketedColor.get_color(x_float, y_float, full_colors)
-            self.context.set_source_rgb(color.r, color.g, color.b)
-
-            radious = random.randint(0, max_size)
-            self.context.arc(x_float * self.width, y_float * self.height, radious, 0, 360)
-            self.context.fill()
 
     def _save_image(self):
         name = self._options.get_mode()
