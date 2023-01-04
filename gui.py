@@ -14,9 +14,16 @@ import string
 import cairo
 import docopt
 import tkinter
-from draw_modes.bucketed import BucketedDrawMode
-from draw_modes.gradient import GradientDrawMode
-from draw_modes.random import RandomDrawMode
+
+from color_modes import ColorMode
+from color_modes.random import RandomColorMode
+from color_modes.gradient import GradientColorMode
+
+from draw_modes import DrawMode
+from draw_modes.circles import CirclesDrawMode
+from draw_modes.overlapping_circles import OverlappingCirclesDrawMode
+from draw_modes.squares import SquaresDrawMode
+from draw_modes.triangles import TrianglesDrawMode
 
 from models import FloatColor
 
@@ -30,69 +37,120 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Colors:").grid(column=0, row=0)
         self._color_entry = tkinter.Entry(self)
         self._color_entry.grid(column=1, row=0)
-        # ff0000,ffa500,ffff00,008000,0000ff,4b0082,ee82ee
-        self._color_entry.insert(tkinter.END, "FF0000, 00FF00, 0000FF")
+        self._color_entry.insert(tkinter.END, "fff100,ff8c00,e81123,ec008c,68217a,00188f,00bcf2,00b294,009e49,bad80a")
 
         # Row 1
         tkinter.Label(self, text="Color Mode:").grid(column=0, row=1)
-        self.modes = {
-            x.get_name(): x for x in [
-                GradientDrawMode(),
-                BucketedDrawMode(),
-                RandomDrawMode(),
-            ]
+        self.color_modes = {
+            x.get_name(): x for x in list[type[ColorMode]]([
+                RandomColorMode,
+                GradientColorMode,
+            ])
         }
+        color_mode_keys = list(self.color_modes.keys())
+        self.current_color_mode_key = tkinter.StringVar(self, color_mode_keys[0])
+        self.current_color_mode_key.trace_add("write", self._color_mode_changed)
+        self.color_mode_selector = tkinter.OptionMenu(self, self.current_color_mode_key, *color_mode_keys)
+        self.color_mode_selector.grid(column=1, row=1)
 
-        mode_keys = list(self.modes.keys())
+        # Row 2
+        tkinter.Label(self, text="Color Options:").grid(column=0, row=2, columnspan=2)
 
-        self.current_mode_key = tkinter.StringVar(self, mode_keys[0])
-        self.current_mode_key.trace_add("write", self._mode_changed)
+        # Row 3
+        self.color_mode_options_frame = tkinter.Frame(self)
+        self.color_mode_options_frame.grid(column=0, row=3, columnspan=2)
+        self.color_mode_settings_entry = {}
 
-        self._mode_selector = tkinter.OptionMenu(self, self.current_mode_key, *mode_keys)
-        self._mode_selector.grid(column=1, row=1)
+        # Row 4
+        tkinter.Label(self, text="Draw Mode:").grid(column=0, row=4)
+        self.draw_modes = {
+            x.get_name(): x for x in list[type[DrawMode]]([
+                TrianglesDrawMode,
+                OverlappingCirclesDrawMode,
+                CirclesDrawMode,
+                SquaresDrawMode,
+            ])
+        }
+        draw_mode_keys = list(self.draw_modes.keys())
+        self.current_draw_mode_key = tkinter.StringVar(self, draw_mode_keys[0])
+        self.current_draw_mode_key.trace_add("write", self._draw_mode_changed)
+        self.draw_mode_selector = tkinter.OptionMenu(self, self.current_draw_mode_key, *draw_mode_keys)
+        self.draw_mode_selector.grid(column=1, row=4)
 
-        tkinter.Label(self, text="Mode Options:").grid(column=0, row=2, columnspan=2)
-        self._mode_options_frame = tkinter.Frame(self)
-        self._mode_options_frame.grid(column=0, row=3, columnspan=2)
-        self._mode_settings_entry = {}
+        # Row 5
+        tkinter.Label(self, text="Draw Options:").grid(column=0, row=5, columnspan=2)
 
-        self._mode_changed()
+        # Row 6
+        self.draw_mode_options_frame = tkinter.Frame(self)
+        self.draw_mode_options_frame.grid(column=0, row=6, columnspan=2)
+        self.draw_mode_settings_entry = {}
 
-    def get_mode(self) -> str:
-        return self.current_mode_key.get()
+        # Finalize
+        self._color_mode_changed()
+        self._draw_mode_changed()
 
     def get_colors(self) -> list[FloatColor]:
         return [
             FloatColor.from_hex(x) for x in self._color_entry.get().split(',')
         ]
 
-    def get_mode_settings(self):
-        return {
-            key: entry.get()
-            for (key, entry) in
-            self._mode_settings_entry.items()
-        }
+    def get_color_mode(self) -> str:
+        return self.current_color_mode_key.get()
 
-    def _mode_changed(self, *args, **kwargs):
-        children = list(self._mode_options_frame.children.values())
+    def get_draw_mode(self) -> str:
+        return self.current_draw_mode_key.get()
+
+    def _color_mode_changed(self, *args, **kwargs) -> None:
+        children = list(self.color_mode_options_frame.children.values())
         for child in children:
             child.destroy()
 
-        mode = self.modes[self.get_mode()]
-        self._mode_settings_entry = {}
+        mode = self.color_modes[self.get_color_mode()]
+        self.color_mode_settings_entry = {}
 
         count = 0
-
         for (key, (name, type, default_value)) in mode.get_option_types().items():
-            label = tkinter.Label(self._mode_options_frame, text=name)
+            label = tkinter.Label(self.color_mode_options_frame, text=name)
             label.grid(row=count, column=0)
-            entry = tkinter.Entry(self._mode_options_frame)
+            entry = tkinter.Entry(self.color_mode_options_frame)
             entry.grid(row=count, column=1)
             entry.insert(tkinter.END, default_value)
 
-            self._mode_settings_entry[key] = entry
-
+            self.color_mode_settings_entry[key] = entry
             count = count + 1
+
+    def _draw_mode_changed(self, *args, **kwargs) -> None:
+        children = list(self.draw_mode_options_frame.children.values())
+        for child in children:
+            child.destroy()
+
+        mode = self.draw_modes[self.get_draw_mode()]
+        self.draw_mode_settings_entry = {}
+
+        count = 0
+        for (key, (name, type, default_value)) in mode.get_option_types().items():
+            label = tkinter.Label(self.draw_mode_options_frame, text=name)
+            label.grid(row=count, column=0)
+            entry = tkinter.Entry(self.draw_mode_options_frame)
+            entry.grid(row=count, column=1)
+            entry.insert(tkinter.END, default_value)
+
+            self.draw_mode_settings_entry[key] = entry
+            count = count + 1
+
+    def get_color_mode_settings(self):
+        return {
+            key: entry.get()
+            for (key, entry) in
+            self.color_mode_settings_entry.items()
+        }
+
+    def get_draw_mode_settings(self):
+        return {
+            key: entry.get()
+            for (key, entry) in
+            self.draw_mode_settings_entry.items()
+        }
 
 class DrawUI(tkinter.Tk):
     def __init__(self, *args, **kwargs):
@@ -141,22 +199,30 @@ class DrawUI(tkinter.Tk):
         if self.image:
             self.image.destroy()
 
-        mode_key = self._options.get_mode()
-        mode = self._options.modes[mode_key]
-        mode.draw(
+        color_mode_key = self._options.get_color_mode()
+        color_mode_class = self._options.color_modes[color_mode_key]
+
+        color_mode = color_mode_class(self._options.get_colors(), **self._options.get_color_mode_settings())
+
+        draw_mode_key = self._options.get_draw_mode()
+        draw_mode_class = self._options.draw_modes[draw_mode_key]
+
+        draw_mode = draw_mode_class(**self._options.get_draw_mode_settings())
+
+        draw_mode.draw(
             self.context,
-            self._options.get_colors(),
-            width=self.width,
-            height=self.height,
-            **self._options.get_mode_settings(),
+            color_mode,
+            self.width,
+            self.height,
         )
 
         self._set_image()
 
     def _save_image(self):
-        name = self._options.get_mode()
+        color_mode = self._options.get_color_mode()
+        draw_mode = self._options.get_draw_mode()
         suffix = ''.join(random.choice(string.ascii_lowercase+string.digits) for _ in range(8))
-        self.surface.write_to_png(f"generated/{name}_{suffix}.png")
+        self.surface.write_to_png(f"generated/{color_mode}_{draw_mode}_{suffix}.png")
 
 def main():
     arguments = docopt.docopt(__doc__, version='v0.0.0')

@@ -1,16 +1,23 @@
-from abc import abstractmethod
+from abc import abstractmethod, abstractclassmethod
 
+import cairo
+
+from color_modes import ColorMode
 from models import FloatColor
 
 class DrawMode(object):
-    @abstractmethod
+    @abstractclassmethod
     def get_name(self):
         pass
 
-    @abstractmethod
+    @abstractclassmethod
     def get_option_types(self) -> dict[str, tuple[str, type, object]]:
         pass
 
     @abstractmethod
-    def draw(self, colors:list[FloatColor], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def draw(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int) -> None:
         pass
