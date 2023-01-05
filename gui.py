@@ -16,13 +16,17 @@ import docopt
 import tkinter
 
 from color_modes import ColorMode
+from color_modes.invert import InvertColorMode
 from color_modes.random import RandomColorMode
 from color_modes.gradient import GradientColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
+from draw_modes.lines import LinesDrawMode
 from draw_modes.overlapping_circles import OverlappingCirclesDrawMode
+from draw_modes.splines import SpinesDrawMode
 from draw_modes.squares import SquaresDrawMode
+from draw_modes.text import TextDrawMode
 from draw_modes.triangles import TrianglesDrawMode
 
 from models import FloatColor
@@ -43,8 +47,9 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Color Mode:").grid(column=0, row=1)
         self.color_modes = {
             x.get_name(): x for x in list[type[ColorMode]]([
-                RandomColorMode,
                 GradientColorMode,
+                InvertColorMode,
+                RandomColorMode,
             ])
         }
         color_mode_keys = list(self.color_modes.keys())
@@ -66,9 +71,12 @@ class OptionsFrame(tkinter.Frame):
         self.draw_modes = {
             x.get_name(): x for x in list[type[DrawMode]]([
                 TrianglesDrawMode,
-                OverlappingCirclesDrawMode,
                 CirclesDrawMode,
                 SquaresDrawMode,
+                LinesDrawMode,
+                SpinesDrawMode,
+                TextDrawMode,
+                OverlappingCirclesDrawMode,
             ])
         }
         draw_mode_keys = list(self.draw_modes.keys())
@@ -202,7 +210,7 @@ class DrawUI(tkinter.Tk):
         color_mode_key = self._options.get_color_mode()
         color_mode_class = self._options.color_modes[color_mode_key]
 
-        color_mode = color_mode_class(self._options.get_colors(), **self._options.get_color_mode_settings())
+        color_mode = color_mode_class(self._options.get_colors(), **self._options.get_color_mode_settings(), context=self.context)
 
         draw_mode_key = self._options.get_draw_mode()
         draw_mode_class = self._options.draw_modes[draw_mode_key]
