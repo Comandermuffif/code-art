@@ -207,6 +207,9 @@ class DrawUI(tkinter.Tk):
         if self.image:
             self.image.destroy()
 
+        # Reset the operator, it case something changed it (invert....)
+        self.context.set_operator(cairo.Operator.OVER)
+
         color_mode_key = self._options.get_color_mode()
         color_mode_class = self._options.color_modes[color_mode_key]
 

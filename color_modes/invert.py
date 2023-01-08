@@ -19,5 +19,5 @@ class InvertColorMode(ColorMode):
 
     def get_color(self, x:float, y:float) -> FloatColor:
 
-
-        return random.choice(self.colors)
+        self.context.set_operator(cairo.Operator.DIFFERENCE)
+        return FloatColor(1, 1, 1)
