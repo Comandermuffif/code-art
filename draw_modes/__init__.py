@@ -3,7 +3,6 @@ from abc import abstractmethod, abstractclassmethod
 import cairo
 
 from color_modes import ColorMode
-from models import FloatColor
 
 class DrawMode(object):
     @abstractclassmethod

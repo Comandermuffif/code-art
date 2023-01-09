@@ -1,3 +1,4 @@
+import math
 import random
 
 from color_modes import ColorMode
@@ -11,25 +12,30 @@ class GradientColorMode(ColorMode):
     @classmethod
     def get_option_types(self) -> dict[str, tuple[str, type, object]]:
         return {
+            'angle': ("Angle (Deg)", float, 45),
             'subcount': ("Subcount", int, 2),
             'divergance': ("Divergance", float, 0),
         }
 
     def __init__(self, colors:list[FloatColor], *args, **kwargs):
+        self.angle = float(kwargs["angle"])
         self.subcount = int(kwargs["subcount"])
         self.divergance = float(kwargs["divergance"])
         self.full_colors = self.get_subcolors(colors, self.subcount)
 
+        self._weight_x = math.cos(math.radians(self.angle)) * math.sqrt(2)
+        self._weight_y = math.sin(math.radians(self.angle)) * math.sqrt(2)
+
     def get_color(self, x:float, y:float) -> FloatColor:
         buckets = len(self.full_colors)
-        bucket_width = 2/buckets
-        color_prob = []
 
-        for i in range(buckets):
-            color_prob.append(None)
+        max_width = self._weight_x + self._weight_y
+        bucket_width = max_width/buckets
 
-        for i in range(buckets):
-            color_prob[i] = abs(random.normalvariate(bucket_width * (i + 0.5), self.divergance) - (x + y))
+        color_prob = [
+            abs(random.normalvariate(bucket_width * (i + 0.5), self.divergance) - (x * self._weight_x + y * self._weight_y))
+            for i in range(buckets)
+        ]
 
         max_prob = min(color_prob)
         for i in range(buckets):
@@ -54,3 +60,15 @@ class GradientColorMode(ColorMode):
 
         full_colors.append(colors[-1])
         return full_colors
+
+    @classmethod
+    def translate_point(cls, x:float, y:float, angleDeg:float) -> tuple[float, float]:
+
+        # (0, 0, 0) => (0 , 0)
+        # (0, 0, 90) => (1, 0)
+
+        center = (0.5, 0.5)
+        new_x = (x - center[0]) * math.cos(math.radians(angleDeg)) - (y - center[1]) * math.sin(math.radians(angleDeg)) + center[0]
+        new_y = (x - center[0]) * math.sin(math.radians(angleDeg)) + (y - center[1]) * math.cos(math.radians(angleDeg)) + center[1]
+
+        return (new_x, new_y)
