@@ -29,16 +29,22 @@ class GradientColorMode(ColorMode):
     def get_color(self, x:float, y:float) -> FloatColor:
         buckets = len(self.full_colors)
 
-        max_width = abs(self._weight_x) + abs(self._weight_y)
+        weight_x = abs(self._weight_x)
+        weight_y = abs(self._weight_y)
+
+        max_width = weight_x + weight_y
         bucket_width = max_width/buckets
 
+        if self._weight_x < 0:
+            x = (x - 0.5) * -1 + 0.5
+
+        if self._weight_y < 0:
+            y = (y - 0.5) * -1 + 0.5
+
         color_prob = [
-            abs(random.normalvariate(bucket_width * (i + 0.5), self.divergance) - (abs(x * self._weight_x) + abs(y * self._weight_y)))
+            abs(random.normalvariate(bucket_width * (i + 0.5), self.divergance) - (x * weight_x + y * weight_y))
             for i in range(buckets)
         ]
-
-        if self._weight_x < 0:
-            color_prob = list(reversed(color_prob))
 
         max_prob = min(color_prob)
         for i in range(buckets):
