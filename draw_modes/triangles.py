@@ -73,4 +73,3 @@ class TrianglesDrawMode(DrawMode):
                     context.line_to((count_x + points_b[2][0]) * step, (count_y + 1 - points_b[2][1]) * step)
                     context.close_path()
                     context.fill()
-
