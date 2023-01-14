@@ -16,12 +16,15 @@ import docopt
 import tkinter
 
 from color_modes import ColorMode
+from color_modes.cluster import ClusterColorMode
 from color_modes.invert import InvertColorMode
 from color_modes.random import RandomColorMode
 from color_modes.gradient import GradientColorMode
+from color_modes.sequence import SequenceColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
+from draw_modes.cluster import ClusterDrawMode
 from draw_modes.lines import LinesDrawMode
 from draw_modes.overlapping_circles import OverlappingCirclesDrawMode
 from draw_modes.splines import SpinesDrawMode
@@ -48,8 +51,10 @@ class OptionsFrame(tkinter.Frame):
         self.color_modes = {
             x.get_name(): x for x in list[type[ColorMode]]([
                 GradientColorMode,
+                ClusterColorMode,
                 InvertColorMode,
                 RandomColorMode,
+                SequenceColorMode,
             ])
         }
         color_mode_keys = list(self.color_modes.keys())
@@ -70,6 +75,7 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Draw Mode:").grid(column=0, row=4)
         self.draw_modes = {
             x.get_name(): x for x in list[type[DrawMode]]([
+                ClusterDrawMode,
                 TrianglesDrawMode,
                 CirclesDrawMode,
                 SquaresDrawMode,

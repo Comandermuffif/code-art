@@ -36,6 +36,13 @@ class FloatColor():
             self.b * y,
         )
 
+    def __div__(self, y:float):
+        return FloatColor(
+            self.r / y,
+            self.g / y,
+            self.b / y,
+        )
+
     @classmethod
     def from_hex(cls, input:str) -> FloatColor:
         input = input.strip().strip('#')
