@@ -1,83 +1,15 @@
 from __future__ import annotations
 import itertools
 
-from math import atan2, cos, dist, radians, sin
+from math import atan2, cos, radians, sin
 
-from random import choices, random
+from random import random
 
 import cairo
 
 from color_modes import ColorMode
 from draw_modes import DrawMode
-from models import FloatColor
-
-class Point(object):
-    def __init__(self, x:float, y:float):
-        self.x = x
-        self.y = y
-
-    def distance(self, other:Point) -> float:
-        return dist((self.x, self.y), (other.x, other.y))
-
-    def get_angle(self, other:Point):
-        shifted_point = other - self
-        return atan2(shifted_point.y, shifted_point.x)
-        # return atan(shifted_point.y / shifted_point.x)
-
-    @classmethod
-    def get_circumcenter(cls, a:Point, b:Point, c:Point) -> Point:
-        d = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y))
-        ux = ((a.x * a.x + a.y * a.y) * (b.y - c.y) + (b.x * b.x + b.y * b.y) * (c.y - a.y) + (c.x * c.x + c.y * c.y) * (a.y - b.y)) / d
-        uy = ((a.x * a.x + a.y * a.y) * (c.x - b.x) + (b.x * b.x + b.y * b.y) * (a.x - c.x) + (c.x * c.x + c.y * c.y) * (b.x - a.x)) / d
-        return Point(ux, uy)
-
-    @classmethod
-    def get_midpoint(cls, *points:Point) -> Point:
-        return Point(
-            (sum([p.x for p in points])) / (len(points)),
-            (sum([p.y for p in points])) / (len(points)),
-        )
-
-    def __eq__(self, other:Point) -> bool:
-        if other is not Point:
-            return False
-        return self.x == other.x and self.y == other.y
-
-    def __hash__(self) -> int:
-        return self.x + self.y
-
-    def __add__(self, other:Point) -> Point:
-        return Point(
-            self.x + other.x,
-            self.y + other.y
-        )
-
-    def __sub__(self, other:Point) -> Point:
-        return Point(
-            self.x - other.x,
-            self.y - other.y
-        )
-
-    def __mul__(self, other:Point) -> Point:
-        return Point(
-            self.x * other.x,
-            self.y * other.y
-        )
-
-    def __div__(self, other:Point) -> Point:
-        return Point(
-            self.x / other.x,
-            self.y / other.y
-        )
-
-class ColorPoint(Point):
-    def __init__(self, x:float, y:float, color:FloatColor):
-        super().__init__(x, y)
-        self.color:FloatColor = color
-
-    def __hash__(self) -> int:
-        return self.color.to_hex().__hash__()
-
+from models import ColorPoint, FloatColor, Point
 class Cluster2DrawMode(DrawMode):
     @classmethod
     def get_name(cls):
@@ -87,6 +19,7 @@ class Cluster2DrawMode(DrawMode):
     def get_option_types(cls) -> dict[str, tuple[str, type, object]]:
         return {
             'points': ("Points", int, 5),
+            'draw_centers': ("Draw Centers", bool, False),
         }
 
     def __init__(self, *args, **kwargs):
@@ -95,9 +28,11 @@ class Cluster2DrawMode(DrawMode):
             for _ in range(int(kwargs["points"]))
         ]
 
+        self.draw_centers = kwargs["draw_centers"]
+
         # self.points = [
-        #     ColorPoint(0.3, 0.3, FloatColor(1, 0, 0)),
-        #     ColorPoint(0.2, 0.8, FloatColor(0, 1, 0)),
+        #     ColorPoint(0.51, 0.49, FloatColor(1, 0, 0)),
+        #     ColorPoint(0.3, 0.3, FloatColor(0, 1, 0)),
         #     ColorPoint(0.75, 0.2, FloatColor(0, 0, 1)),
         # ]
 
@@ -245,3 +180,12 @@ class Cluster2DrawMode(DrawMode):
             context.close_path()
             context.fill()
             context.stroke()
+
+        if self.draw_centers:
+            for point in self.points:
+                context.set_source_rgb(0, 0, 0)
+                context.arc(point.x, point.y, 7, 0, 360)
+                context.fill()
+                context.set_source_rgb(*point.color.to_tuple())
+                context.arc(point.x, point.y, 5, 0, 360)
+                context.fill()
