@@ -28,19 +28,25 @@ class SpinesDrawMode(DrawMode):
             'max_start_angle': ("Max Start Angle", int, 360),
 
             'chain_count': ("Chains", int, 2),
+
+            'do_stroke': ("Stroke", bool, True),
+            'do_fill': ("Fill", bool, True),
         }
 
     def __init__(self, *args, **kwargs):
-        self.count = int(kwargs["count"])
-        self.min_length = int(kwargs["min_length"])
-        self.max_length = int(kwargs["max_length"])
-        self.min_width = int(kwargs["min_width"])
-        self.max_width = int(kwargs["max_width"])
-        self.min_angle = int(kwargs["min_angle"])
-        self.max_angle = int(kwargs["max_angle"])
-        self.min_start_angle = int(kwargs["min_start_angle"])
-        self.max_start_angle = int(kwargs["max_start_angle"])
-        self.chain_count = int(kwargs["chain_count"])
+        self.count = kwargs["count"]
+        self.min_length = kwargs["min_length"]
+        self.max_length = kwargs["max_length"]
+        self.min_width = kwargs["min_width"]
+        self.max_width = kwargs["max_width"]
+        self.min_angle = kwargs["min_angle"]
+        self.max_angle = kwargs["max_angle"]
+        self.min_start_angle = kwargs["min_start_angle"]
+        self.max_start_angle = kwargs["max_start_angle"]
+        self.chain_count = kwargs["chain_count"]
+
+        self.do_stroke = kwargs["do_stroke"]
+        self.do_fill = kwargs["do_fill"]
 
     def draw(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int) -> None:
         for _ in range(self.count):
@@ -68,4 +74,8 @@ class SpinesDrawMode(DrawMode):
                 y = next_y
                 angle = angle + math.radians(random.random() * (self.max_angle - self.min_angle) + self.min_angle)
 
-            context.stroke()
+            if self.do_stroke:
+                context.stroke()
+            if self.do_fill:
+                context.close_path()
+                context.fill()

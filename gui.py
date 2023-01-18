@@ -24,7 +24,8 @@ from color_modes.sequence import SequenceColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
-from draw_modes.cluster import ClusterDrawMode
+from draw_modes.cluster2 import Cluster2DrawMode
+from draw_modes.cluster3 import Cluster3DrawMode
 from draw_modes.lines import LinesDrawMode
 from draw_modes.overlapping_circles import OverlappingCirclesDrawMode
 from draw_modes.splines import SpinesDrawMode
@@ -75,7 +76,8 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Draw Mode:").grid(column=0, row=4)
         self.draw_modes = {
             x.get_name(): x for x in list[type[DrawMode]]([
-                ClusterDrawMode,
+                Cluster3DrawMode,
+                Cluster2DrawMode,
                 TrianglesDrawMode,
                 CirclesDrawMode,
                 SquaresDrawMode,
@@ -97,7 +99,7 @@ class OptionsFrame(tkinter.Frame):
         # Row 6
         self.draw_mode_options_frame = tkinter.Frame(self)
         self.draw_mode_options_frame.grid(column=0, row=6, columnspan=2)
-        self.draw_mode_settings_entry = {}
+        self.draw_mode_settings_values = dict[str, tkinter.Variable]()
 
         # Finalize
         self._color_mode_changed()
@@ -139,17 +141,28 @@ class OptionsFrame(tkinter.Frame):
             child.destroy()
 
         mode = self.draw_modes[self.get_draw_mode()]
-        self.draw_mode_settings_entry = {}
+        self.draw_mode_settings_values = dict[str, tkinter.Variable]()
 
         count = 0
         for (key, (name, type, default_value)) in mode.get_option_types().items():
             label = tkinter.Label(self.draw_mode_options_frame, text=name)
             label.grid(row=count, column=0)
-            entry = tkinter.Entry(self.draw_mode_options_frame)
-            entry.grid(row=count, column=1)
-            entry.insert(tkinter.END, default_value)
 
-            self.draw_mode_settings_entry[key] = entry
+            if type == bool:
+                value = tkinter.BooleanVar(value=default_value)
+                entry = tkinter.Checkbutton(self.draw_mode_options_frame, onvalue=True, offvalue=False, variable=value)
+            elif type == float:
+                value = tkinter.DoubleVar
+                entry = tkinter.Entry(self.draw_mode_options_frame, textvariable=value)
+            elif type == int:
+                value = tkinter.IntVar(value=default_value)
+                entry = tkinter.Entry(self.draw_mode_options_frame, textvariable=value)
+            else:
+                value = tkinter.StringVar(value=default_value)
+                entry = tkinter.Entry(self.draw_mode_options_frame, textvariable=value)
+            entry.grid(row=count, column=1)
+
+            self.draw_mode_settings_values[key] = value
             count = count + 1
 
     def get_color_mode_settings(self):
@@ -163,7 +176,7 @@ class OptionsFrame(tkinter.Frame):
         return {
             key: entry.get()
             for (key, entry) in
-            self.draw_mode_settings_entry.items()
+            self.draw_mode_settings_values.items()
         }
 
 class DrawUI(tkinter.Tk):

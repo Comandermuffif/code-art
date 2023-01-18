@@ -1,3 +1,4 @@
+from math import ceil, floor
 import cairo
 
 from color_modes import ColorMode
@@ -26,5 +27,5 @@ class SquaresDrawMode(DrawMode):
                 color = color_mode.get_color(count_x/self.count, count_y/self.count)
 
                 context.set_source_rgb(color.r, color.g, color.b)
-                context.rectangle(count_x * x_step, count_y * y_step, x_step, y_step)
+                context.rectangle(floor(count_x * x_step), floor(count_y * y_step), ceil(x_step), ceil(y_step))
                 context.fill()
