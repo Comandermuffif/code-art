@@ -37,6 +37,82 @@ from models import FloatColor
 
 from PIL import Image, ImageTk
 
+class ColorModeSettingsFrame(tkinter.Frame):
+    def __init__(self, color_mode:ColorMode, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.color_mode = color_mode
+        self.settings_variables = dict[str, tkinter.Variable]()
+
+        count = 0
+        for (option_key, (name, type, default_value)) in self.color_mode.get_option_types().items():
+            label = tkinter.Label(self, text=name)
+            label.grid(row=count, column=0)
+
+            if type == bool:
+                variable = tkinter.BooleanVar(value=default_value)
+                entry = tkinter.Checkbutton(self, onvalue=True, offvalue=False, variable=variable)
+            elif type == float:
+                variable = tkinter.DoubleVar(value=default_value)
+                entry = tkinter.Entry(self, textvariable=variable)
+            elif type == int:
+                variable = tkinter.IntVar(value=default_value)
+                entry = tkinter.Entry(self, textvariable=variable)
+            else:
+                variable = tkinter.StringVar(value=default_value)
+                entry = tkinter.Entry(self, textvariable=variable)
+
+            self.settings_variables[option_key] = variable
+            entry.grid(row=count, column=1)
+            count += 1
+
+        if count == 0:
+            tkinter.Label(self, text="N/A").grid(row=0, column=0)
+
+    def get_settings(self):
+        return {
+            key: entry.get()
+            for (key, entry) in
+            self.settings_variables.items()
+        }
+
+class DrawModeSettingsFrame(tkinter.Frame):
+    def __init__(self, draw_mode:DrawMode, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.draw_mode = draw_mode
+        self.settings_variables = dict[str, tkinter.Variable]()
+
+        count = 0
+        for (option_key, (name, type, default_value)) in self.draw_mode.get_option_types().items():
+            label = tkinter.Label(self, text=name)
+            label.grid(row=count, column=0)
+
+            if type == bool:
+                variable = tkinter.BooleanVar(value=default_value)
+                entry = tkinter.Checkbutton(self, onvalue=True, offvalue=False, variable=variable)
+            elif type == float:
+                variable = tkinter.DoubleVar(value=default_value)
+                entry = tkinter.Entry(self, textvariable=variable)
+            elif type == int:
+                variable = tkinter.IntVar(value=default_value)
+                entry = tkinter.Entry(self, textvariable=variable)
+            else:
+                variable = tkinter.StringVar(value=default_value)
+                entry = tkinter.Entry(self, textvariable=variable)
+
+            self.settings_variables[option_key] = variable
+            entry.grid(row=count, column=1)
+            count += 1
+
+        if count == 0:
+            tkinter.Label(self, text="N/A").grid(row=0, column=0)
+
+    def get_settings(self):
+        return {
+            key: entry.get()
+            for (key, entry) in
+            self.settings_variables.items()
+        }
+
 class OptionsFrame(tkinter.Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -68,9 +144,9 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Color Options:").grid(column=0, row=2, columnspan=2)
 
         # Row 3
-        self.color_mode_options_frame = tkinter.Frame(self)
-        self.color_mode_options_frame.grid(column=0, row=3, columnspan=2)
-        self.color_mode_settings_entry = {}
+        self.color_mode_settings = tkinter.Frame(self)
+        self.color_mode_settings.grid(column=0, row=3, columnspan=2)
+        self.color_mode_settings_frames = dict[str, ColorModeSettingsFrame]()
 
         # Row 4
         tkinter.Label(self, text="Draw Mode:").grid(column=0, row=4)
@@ -97,11 +173,13 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Draw Options:").grid(column=0, row=5, columnspan=2)
 
         # Row 6
-        self.draw_mode_options_frame = tkinter.Frame(self)
-        self.draw_mode_options_frame.grid(column=0, row=6, columnspan=2)
-        self.draw_mode_settings_values = dict[str, tkinter.Variable]()
+        self.draw_mode_settings = tkinter.Frame(self)
+        self.draw_mode_settings.grid(column=0, row=6, columnspan=2)
+        self.draw_mode_settings_frames = dict[str, DrawModeSettingsFrame]()
 
         # Finalize
+        self._set_color_mode_settings()
+        self._set_draw_mode_settings()
         self._color_mode_changed()
         self._draw_mode_changed()
 
@@ -116,68 +194,43 @@ class OptionsFrame(tkinter.Frame):
     def get_draw_mode(self) -> str:
         return self.current_draw_mode_key.get()
 
+    def _set_color_mode_settings(self):
+        # For every color mode
+        for (color_mode_key, color_mode) in self.color_modes.items():
+            color_mode_settings_frame = ColorModeSettingsFrame(color_mode, self.color_mode_settings)
+            self.color_mode_settings_frames[color_mode_key] = color_mode_settings_frame
+
+            color_mode_settings_frame.grid(row=1, column=1)
+            color_mode_settings_frame.grid_remove()
+
+    def _set_draw_mode_settings(self):
+        # For every color mode
+        for (draw_mode_key, draw_mode) in self.draw_modes.items():
+            draw_mode_settings_frame = DrawModeSettingsFrame(draw_mode, self.draw_mode_settings)
+            self.draw_mode_settings_frames[draw_mode_key] = draw_mode_settings_frame
+
+            draw_mode_settings_frame.grid(row=1, column=1)
+            draw_mode_settings_frame.grid_remove()
+
     def _color_mode_changed(self, *args, **kwargs) -> None:
-        children = list(self.color_mode_options_frame.children.values())
-        for child in children:
-            child.destroy()
+        # Hide all frames
+        for (color_mode_key, color_mode_settings_frame) in self.color_mode_settings_frames.items():
+            color_mode_settings_frame.grid_remove()
 
-        mode = self.color_modes[self.get_color_mode()]
-        self.color_mode_settings_entry = {}
-
-        count = 0
-        for (key, (name, type, default_value)) in mode.get_option_types().items():
-            label = tkinter.Label(self.color_mode_options_frame, text=name)
-            label.grid(row=count, column=0)
-            entry = tkinter.Entry(self.color_mode_options_frame)
-            entry.grid(row=count, column=1)
-            entry.insert(tkinter.END, default_value)
-
-            self.color_mode_settings_entry[key] = entry
-            count = count + 1
+        self.color_mode_settings_frames[self.get_color_mode()].grid()
 
     def _draw_mode_changed(self, *args, **kwargs) -> None:
-        children = list(self.draw_mode_options_frame.children.values())
-        for child in children:
-            child.destroy()
+        # Hide all frames
+        for (draw_mode_key, draw_mode_settings_frame) in self.draw_mode_settings_frames.items():
+            draw_mode_settings_frame.grid_remove()
 
-        mode = self.draw_modes[self.get_draw_mode()]
-        self.draw_mode_settings_values = dict[str, tkinter.Variable]()
-
-        count = 0
-        for (key, (name, type, default_value)) in mode.get_option_types().items():
-            label = tkinter.Label(self.draw_mode_options_frame, text=name)
-            label.grid(row=count, column=0)
-
-            if type == bool:
-                value = tkinter.BooleanVar(value=default_value)
-                entry = tkinter.Checkbutton(self.draw_mode_options_frame, onvalue=True, offvalue=False, variable=value)
-            elif type == float:
-                value = tkinter.DoubleVar
-                entry = tkinter.Entry(self.draw_mode_options_frame, textvariable=value)
-            elif type == int:
-                value = tkinter.IntVar(value=default_value)
-                entry = tkinter.Entry(self.draw_mode_options_frame, textvariable=value)
-            else:
-                value = tkinter.StringVar(value=default_value)
-                entry = tkinter.Entry(self.draw_mode_options_frame, textvariable=value)
-            entry.grid(row=count, column=1)
-
-            self.draw_mode_settings_values[key] = value
-            count = count + 1
+        self.draw_mode_settings_frames[self.get_draw_mode()].grid()
 
     def get_color_mode_settings(self):
-        return {
-            key: entry.get()
-            for (key, entry) in
-            self.color_mode_settings_entry.items()
-        }
+        return self.color_mode_settings_frames[self.get_color_mode()].get_settings()
 
     def get_draw_mode_settings(self):
-        return {
-            key: entry.get()
-            for (key, entry) in
-            self.draw_mode_settings_values.items()
-        }
+        return self.draw_mode_settings_frames[self.get_draw_mode()].get_settings()
 
 class DrawUI(tkinter.Tk):
     def __init__(self, *args, **kwargs):
