@@ -10,10 +10,10 @@ import cairo
 from color_modes import ColorMode
 from draw_modes import DrawMode
 from models import ColorPoint, FloatColor, Point
-class Cluster2DrawMode(DrawMode):
+class SmartClusterDrawMode(DrawMode):
     @classmethod
     def get_name(cls):
-        return "Cluster2"
+        return "Smart Cluster"
 
     @classmethod
     def get_option_types(cls) -> dict[str, tuple[str, type, object]]:

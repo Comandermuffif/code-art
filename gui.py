@@ -8,6 +8,8 @@ Options:
 
 """
 from __future__ import annotations
+import datetime
+import logging
 
 import random
 import string
@@ -24,8 +26,9 @@ from color_modes.sequence import SequenceColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
-from draw_modes.cluster2 import Cluster2DrawMode
-from draw_modes.cluster3 import Cluster3DrawMode
+from draw_modes.cluster_smart import SmartClusterDrawMode
+from draw_modes.cluster_binary import ClusterBinaryDrawMode
+from draw_modes.cluster_test import ClusterTestDrawMode
 from draw_modes.lines import LinesDrawMode
 from draw_modes.overlapping_circles import OverlappingCirclesDrawMode
 from draw_modes.splines import SpinesDrawMode
@@ -152,8 +155,9 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Draw Mode:").grid(column=0, row=4)
         self.draw_modes = {
             x.get_name(): x for x in list[type[DrawMode]]([
-                Cluster3DrawMode,
-                Cluster2DrawMode,
+                ClusterTestDrawMode,
+                ClusterBinaryDrawMode,
+                SmartClusterDrawMode,
                 TrianglesDrawMode,
                 CirclesDrawMode,
                 SquaresDrawMode,
@@ -292,12 +296,18 @@ class DrawUI(tkinter.Tk):
 
         draw_mode = draw_mode_class(**self._options.get_draw_mode_settings())
 
+        start_time = datetime.datetime.now()
+
         draw_mode.draw(
             self.context,
             color_mode,
             self.width,
             self.height,
         )
+
+        time_elapsed = datetime.datetime.now() - start_time
+
+        logging.info(f"Render took {time_elapsed.total_seconds()} seconds")
 
         self._set_image()
 
@@ -309,6 +319,7 @@ class DrawUI(tkinter.Tk):
 
 def main():
     arguments = docopt.docopt(__doc__, version='v0.0.0')
+    logging.basicConfig(level=logging.DEBUG)
     window = DrawUI()
     window.mainloop()
 

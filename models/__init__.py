@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import atan2, dist
+from math import atan2, dist, radians, sqrt
 from turtle import width
 
 class DrawModes():
@@ -87,7 +87,10 @@ class Point(object):
         return self.x == other.x and self.y == other.y
 
     def __hash__(self) -> int:
-        return self.x + self.y
+        return hash((self.x, self.y))
+
+    def __str__(self) -> str:
+        return f"Point({self.x},{self.y})"
 
     def __add__(self, other:Point) -> Point:
         return Point(
@@ -146,5 +149,65 @@ class ColorPoint(Point):
         super().__init__(x, y)
         self.color:FloatColor = color
 
-    def __hash__(self) -> int:
-        return self.color.to_hex().__hash__()
+class Line(object):
+    def __init__(self, point_a:Point, point_b:Point):
+        self.point_a = point_a
+        self.point_b = point_b
+
+        self._y_slope = (point_b.x - point_a.x) / (point_b.y - point_a.y)
+        self._x_slope = (point_b.y - point_a.y) / (point_b.x - point_a.x)
+
+    def get_y(self, x:float) -> float:
+        return (x - self.point_a.x) * self._x_slope + self.point_a.y
+
+    def get_x(self, y:float) -> float:
+        return (y - self.point_a.y) * self._y_slope + self.point_a.x
+
+    def get_side(self, point:Point) -> int:
+        d = (point.x - self.point_a.x) * (self.point_b.y - self.point_a.y) - (point.y - self.point_a.y) * (self.point_b.x - self.point_a.x)
+        return d
+
+    def get_distance(self, point:Point) -> float:
+        return abs((self.point_b.x - self.point_a.x) * (self.point_a.y - point.y) - (self.point_a.x - point.x) * (self.point_b.y - self.point_a.y)) / sqrt(pow(self.point_b.x - self.point_a.x, 2) + pow(self.point_b.y - self.point_a.y, 2))
+
+    def get_intersection(self, other:Line) -> Point | None:
+        # Line self represented as a1x + b1y = c1
+        a1 = self.point_b.y - self.point_a.y
+        b1 = self.point_a.x - self.point_b.x
+        c1 = a1 * (self.point_a.x) + b1 * (self.point_a.y)
+
+        # Line other represented as a2x + b2y = c2
+        a2 = other.point_b.y - other.point_a.y
+        b2 = other.point_a.x - other.point_b.x
+        c2 = a2 * (other.point_a.x) + b2 * (other.point_a.y)
+
+        determinant = a1 * b2 - a2 * b1
+
+        if (determinant == 0):
+            return None
+        else:
+            x = (b2 * c1 - b1 * c2)/determinant
+            y = (a1 * c2 - a2 * c1)/determinant
+            return Point(x, y)
+
+    @classmethod
+    def get_decision_boundary(cls, point_a:Point, point_b:Point) -> Line:
+        midpoint = (point_a + point_b) * Point(0.5, 0.5)
+        delta = point_a - midpoint
+        norm_a = midpoint + Point(delta.y, delta.x * -1)
+        norm_b = midpoint - Point(delta.y, delta.x * -1)
+        return Line(norm_a, norm_b)
+
+    def limit(self, x_max:int, y_max:int, x_min=0, y_min=0) -> LineSegment:
+        min_1 = self.get_x(y_min)
+        min_2 = self.get_y(x_min)
+        min_3 = self.get_x(x_max)
+        min_4 = self.get_y(y_max)
+
+        point_a = Point(x_min, min_2) if min_1 < 0 else Point(min_1, y_min)
+        point_b = Point(x_max, min_3) if min_4 > x_max else Point(min_4, y_max)
+
+        return LineSegment(point_a, point_b)
+
+class LineSegment(Line):
+    pass

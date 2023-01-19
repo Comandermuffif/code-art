@@ -1,4 +1,5 @@
 from __future__ import annotations
+import itertools
 
 from random import random
 
@@ -8,16 +9,45 @@ from color_modes import ColorMode
 from draw_modes import DrawMode
 from models import ColorPoint, Point, Rect
 
-class Cluster3DrawMode(DrawMode):
+class DistanceLookup(object):
+    def __init__(self, points:list[Point], lowe_bound:Point, upper_bount:Point, subdivisions:int=10):
+        self._distances = dict[Point, dict[Point, float]]()
+        self._nearest = dict[Point, Point]()
+
+
+        for (point_a, point_b) in itertools.pairwise(points):
+            distance = point_a.distance(point_b)
+
+            if point_a not in self._distances:
+                self._distances[point_a] = dict[Point, float]()
+
+            if point_b not in self._distances:
+                self._distances[point_b] = dict[Point, tuple[Point, float]]()
+
+            self._distances[point_a][point_b] = distance
+            self._distances[point_b][point_a] = distance
+
+            if point_a not in self._nearest or self._nearest[point_a][1] > distance:
+                self._nearest[point_a] = (point_b, distance)
+            if point_b not in self._nearest or self._nearest[point_b][1] > distance:
+                self._nearest[point_b] = (point_a, distance)
+
+    def get_nearest(self, point:Point) -> Point:
+        return self._nearest[point][1]
+
+    def get_distance(self, point_a:Point, point_b:Point) -> float:
+        return self._distances[point_a][point_b]
+
+class ClusterBinaryDrawMode(DrawMode):
     @classmethod
     def get_name(cls):
-        return "Cluster3"
+        return "Cluster (Binary Search)"
 
     @classmethod
     def get_option_types(cls) -> dict[str, tuple[str, type, object]]:
         return {
-            'points': ("Points", int, 5),
-            'resolution': ("Resolution", int, 10),
+            'points': ("Points", int, 50),
+            'resolution': ("Resolution", int, 4),
             'draw_centers': ("Draw Centers", bool, False),
         }
 
@@ -30,15 +60,18 @@ class Cluster3DrawMode(DrawMode):
         self.resolution = kwargs["resolution"]
         self.draw_centers = kwargs["draw_centers"]
 
-    def _get_nearest_point(self, point:Point) -> tuple[ColorPoint, float]:
-        distances = [
-            (other_point, point.distance(other_point))
-            for other_point in self.points
-            if other_point != point
-        ]
+        self._distance_lookup = None
 
-        distances = sorted(distances, key=lambda x: x[1])
-        return distances[0]
+    def _get_nearest_point(self, point:Point) -> tuple[ColorPoint, float]:
+        return self._distance_lookup.get_nearest(point)
+        # distances = [
+        #     (other_point, point.distance(other_point))
+        #     for other_point in self.points
+        #     if other_point != point
+        # ]
+
+        # distances = sorted(distances, key=lambda x: x[1])
+        # return distances[0]
 
     def _rect_colors(self, rect:Rect) -> list[ColorPoint]:
         found_colors = set[ColorPoint]()
@@ -76,6 +109,8 @@ class Cluster3DrawMode(DrawMode):
             point.color = color_mode.get_color(point.x, point.y)
             point.x = point.x * width
             point.y = point.y * height
+
+        self._distance_lookup = DistanceLookup(self.points)
 
         start_rect = Rect(0, 0, width, height)
         self._draw_rect(context, start_rect)
