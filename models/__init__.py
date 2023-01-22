@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import atan2, dist, radians, sqrt
+from math import atan2, cos, dist, sin, sqrt
 from turtle import width
 
 class DrawModes():
@@ -89,7 +89,7 @@ class Point(object):
     def __hash__(self) -> int:
         return hash((self.x, self.y))
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f"Point({self.x},{self.y})"
 
     def __add__(self, other:Point) -> Point:
@@ -154,14 +154,27 @@ class Line(object):
         self.point_a = point_a
         self.point_b = point_b
 
-        self._y_slope = (point_b.x - point_a.x) / (point_b.y - point_a.y)
-        self._x_slope = (point_b.y - point_a.y) / (point_b.x - point_a.x)
+        # Line self represented as a * x + b * y = c
+        self.a = self.point_b.y - self.point_a.y
+        self.b = self.point_a.x - self.point_b.x
+        self.c = self.a * (self.point_a.x) + self.b * (self.point_a.y)
 
-    def get_y(self, x:float) -> float:
-        return (x - self.point_a.x) * self._x_slope + self.point_a.y
+    def __repr__(self) -> str:
+        return f"Line<{self.point_a},{self.point_b}>"
 
-    def get_x(self, y:float) -> float:
-        return (y - self.point_a.y) * self._y_slope + self.point_a.x
+    def get_y(self, x:float) -> float | None:
+        if self.b == 0:
+            # Line is only on one axis
+            return None
+        # (c - a * x) / b = y
+        return (self.c - self.a * x) / self.b
+
+    def get_x(self, y:float) -> float | None:
+        if self.a == 0:
+            # Line is only on one axis
+            return None
+        # x = (c - b * y) / a
+        return (self.c - self.b * y) / self.a
 
     def get_side(self, point:Point) -> int:
         d = (point.x - self.point_a.x) * (self.point_b.y - self.point_a.y) - (point.y - self.point_a.y) * (self.point_b.x - self.point_a.x)
@@ -204,10 +217,40 @@ class Line(object):
         min_3 = self.get_x(x_max)
         min_4 = self.get_y(y_max)
 
-        point_a = Point(x_min, min_2) if min_1 < 0 else Point(min_1, y_min)
-        point_b = Point(x_max, min_3) if min_4 > x_max else Point(min_4, y_max)
+        if min_1 == None:
+            point_a = Point(x_min, min_2)
+        elif min_2 == None:
+            point_a = Point(min_1, y_min)
+        else:
+            point_a = Point(x_min, min_2) if min_1 < x_min else Point(min_1, y_min)
+
+        if min_3 == None:
+            point_b = Point(x_max, min_4)
+        elif min_4 == None:
+            point_b = Point(min_3, y_max)
+        else:
+            point_b = Point(min_3, y_max) if min_4 > x_max else Point(x_max, min_4)
 
         return LineSegment(point_a, point_b)
 
 class LineSegment(Line):
-    pass
+    def get_x(self, y: float) -> float | None:
+        x = super().get_x(y)
+        if x < self.point_a.x and x < self.point_b.x:
+            return None
+        if x > self.point_a.x and x > self.point_b.x:
+            return None
+        return x
+
+    def get_y(self, x: float) -> float | None:
+        y = super().get_y(x)
+        if y < self.point_a.y and y < self.point_b.y:
+            return None
+        if y > self.point_a.y and y > self.point_b.y:
+            return None
+        return y
+
+class Ray(Line):
+    def __init__(self, point:Point, angle_rad:float):
+        super().__init__(point, point + Point(cos(angle_rad), sin(angle_rad)))
+        self.angle_rad = angle_rad
