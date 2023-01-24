@@ -130,11 +130,11 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Color Mode:").grid(column=0, row=1)
         self.color_modes = {
             x.get_name(): x for x in list[type[ColorMode]]([
+                SequenceColorMode,
                 GradientColorMode,
                 ClusterColorMode,
                 InvertColorMode,
                 RandomColorMode,
-                SequenceColorMode,
             ])
         }
         color_mode_keys = list(self.color_modes.keys())
@@ -155,9 +155,9 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Draw Mode:").grid(column=0, row=4)
         self.draw_modes = {
             x.get_name(): x for x in list[type[DrawMode]]([
+                SmartClusterDrawMode,
                 ClusterTestDrawMode,
                 ClusterBinaryDrawMode,
-                SmartClusterDrawMode,
                 TrianglesDrawMode,
                 CirclesDrawMode,
                 SquaresDrawMode,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 import itertools
+import logging
 
 from math import atan2, cos, radians, sin
 
@@ -9,7 +10,7 @@ import cairo
 
 from color_modes import ColorMode
 from draw_modes import DrawMode
-from models import ColorPoint, FloatColor, Point
+from models import ColorPoint, FloatColor, Line, LineSegment, Point, Polygon
 class SmartClusterDrawMode(DrawMode):
     @classmethod
     def get_name(cls):
@@ -18,174 +19,89 @@ class SmartClusterDrawMode(DrawMode):
     @classmethod
     def get_option_types(cls) -> dict[str, tuple[str, type, object]]:
         return {
-            'points': ("Points", int, 5),
-            'draw_centers': ("Draw Centers", bool, False),
+            'count': ("Count", int, 5),
+            'draw_centers': ("Draw Centers", bool, True),
+            'draw_edges': ("Draw Edges", bool, True),
+            'draw_fill': ("Fill", bool, True),
         }
 
     def __init__(self, *args, **kwargs):
-        self.points = [
-            ColorPoint(random(), random(), None)
-            for _ in range(int(kwargs["points"]))
-        ]
-
+        self.count = kwargs["count"]
         self.draw_centers = kwargs["draw_centers"]
+        self.draw_edges = kwargs["draw_edges"]
+        self.draw_fill = kwargs["draw_fill"]
 
-        # self.points = [
-        #     ColorPoint(0.51, 0.49, FloatColor(1, 0, 0)),
-        #     ColorPoint(0.3, 0.3, FloatColor(0, 1, 0)),
-        #     ColorPoint(0.75, 0.2, FloatColor(0, 0, 1)),
-        # ]
+    def _draw_polygon(self, context:cairo.Context, center:ColorPoint, polygon:Polygon, width:int, height:int) -> None:
+        logging.debug(f"Starting polygon {center.color}")
 
-    def _get_nearest_point(self, point:Point) -> tuple[ColorPoint, float]:
-        distances = [
-            (other_point, point.distance(other_point))
-            for other_point in self.points
-        ]
+        for point in polygon.points:
+            if point == polygon.points[0]:
+                context.move_to(*(point * Point(width, height)).as_tuple())
+            else:
+                context.line_to(*(point * Point(width, height)).as_tuple())
 
-        distances = sorted(distances, key=lambda x: x[1])
-        return distances[0]
+            logging.debug(f"Adding point {point}")
+        context.close_path()
 
-    def _get_edge_points(self, point:Point, mid_point:Point, width:float, height:float) -> tuple[Point, Point, Point]:
-        angle = atan2(mid_point.y - point.y, mid_point.x - point.x) + radians(90)
-
-        offset = Point(cos(angle) * width, sin(angle) * height)
-
-        left_point = mid_point - offset
-        right_point = mid_point + offset
-
-        # This needs to actually be the correct values
-
-        # left_point.x = min(width, max(0, left_point.x))
-        # left_point.y = min(height, max(0, left_point.y))
-
-        # right_point.x = min(width, max(0, right_point.x))
-        # right_point.y = min(height, max(0, right_point.y))
-
-        return (left_point, right_point, mid_point)
-
-    def draw(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int) -> None:
-        corner_points = [
-            Point(0, 0),
-            Point(width, 0),
-            Point(width, height),
-            Point(0, height),
-        ]
-
-        # Assign colors and make points absolute
-        for point in self.points:
-            point.color = color_mode.get_color(point.x, point.y)
-            point.x = point.x * width
-            point.y = point.y * height
-
-            # Draw each color point
-            context.set_source_rgb(*point.color.to_tuple())
-            context.arc(point.x, point.y, 20, 0, 360)
+        if self.draw_fill and self.draw_edges:
+            context.set_source_rgb(*center.color.to_tuple())
+            context.fill_preserve()
+            context.set_source_rgb(0, 0, 0)
+            context.stroke()
+        elif self.draw_fill:
+            context.set_source_rgb(*center.color.to_tuple())
             context.fill()
-
-        polygons = {
-            p: list[Point]()
-            for p in self.points
-        }
-
-        valid_trios = list[tuple[tuple[ColorPoint, ...], Point]]()
-
-        for point_trio in itertools.combinations(self.points, 3):
-            circumcenter = Point.get_circumcenter(*point_trio)
-            distance = circumcenter.distance(point_trio[0])
-            is_valid = True
-
-            # The circumcenter is a true min if it's closest to the trio
-            for other_point in self.points:
-                # Skip trio points
-                if other_point in point_trio:
-                    continue
-
-                other_dist = circumcenter.distance(other_point)
-                if other_dist < distance:
-                    is_valid = False
-                    break
-
-            if is_valid:
-                valid_trios.append(
-                    (point_trio, circumcenter)
-                )
-                context.set_source_rgb(0, 0, 0)
-                context.arc(circumcenter.x, circumcenter.y, 5, 0, 360)
-                context.fill()
-
-                midpoint_a = Point.get_midpoint(point_trio[0], point_trio[1])
-                midpoint_b = Point.get_midpoint(point_trio[1], point_trio[2])
-                midpoint_c = Point.get_midpoint(point_trio[0], point_trio[2])
-
-                # edge_points_a = self._get_edge_points(point_trio[0], midpoint_a, width, height)
-                # edge_points_b = self._get_edge_points(point_trio[1], midpoint_b, width, height)
-                # edge_points_c = self._get_edge_points(point_trio[2], midpoint_c, width, height)
-
-                # Edge points are valid if they are the closest to that side
-
-                # context.set_source_rgb(0.5, 0.5, 0.5)
-
-                # for (edge_l, edge_r, midpoint) in [edge_points_a, edge_points_b, edge_points_c]:
-                #     context.move_to(midpoint.x, midpoint.y)
-                #     context.line_to(edge_l.x, edge_l.y)
-                #     context.stroke()
-
-                #     context.move_to(midpoint.x, midpoint.y)
-                #     context.line_to(edge_r.x, edge_r.y)
-                #     context.stroke()
-
-                polygons[point_trio[0]].append(midpoint_a)
-                polygons[point_trio[0]].append(midpoint_c)
-
-                polygons[point_trio[1]].append(midpoint_a)
-                polygons[point_trio[1]].append(midpoint_b)
-
-                polygons[point_trio[2]].append(midpoint_b)
-                polygons[point_trio[2]].append(midpoint_c)
-
-                if distance < midpoint_b.distance(point_trio[0]):
-                    polygons[point_trio[0]].append(circumcenter)
-                else:
-                    polygons[point_trio[0]].append(midpoint_b)
-
-                if distance < midpoint_c.distance(point_trio[1]):
-                    polygons[point_trio[1]].append(circumcenter)
-                else:
-                    polygons[point_trio[1]].append(midpoint_c)
-
-                if distance < midpoint_a.distance(point_trio[2]):
-                    polygons[point_trio[2]].append(circumcenter)
-                else:
-                    polygons[point_trio[2]].append(midpoint_a)
-
-        for corner_point in corner_points:
-            (nearest, distance) = self._get_nearest_point(corner_point)
-            polygons[nearest].append(corner_point)
-
-        for (point, polygon_points) in polygons.items():
-            context.set_source_rgb(*point.color.to_tuple())
-
-            # These need to be sorted
-            sorted_p = sorted([
-                (point.get_angle(p), p)
-                for p in polygon_points
-            ], key=lambda p: p[0])
-
-            poly_p = [p[1] for p in sorted_p]
-
-            context.move_to(poly_p[0].x, poly_p[0].y)
-            for p_a in poly_p[1:]:
-                context.line_to(p_a.x, p_a.y)
-
-            context.close_path()
-            context.fill()
+        elif self.draw_edges:
+            context.set_source_rgb(0, 0, 0)
             context.stroke()
 
+    def _draw_center(self, context:cairo.Context, color_point:ColorPoint, width:int, height:int) -> None:
+        context.set_source_rgb(0, 0, 0)
+        context.arc(color_point.x * width, color_point.y * height, 7, 0, 360)
+        context.fill()
+        context.set_source_rgb(*color_point.color.to_tuple())
+        context.arc(color_point.x * width, color_point.y * height, 5, 0, 360)
+        context.fill()
+
+    def draw(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int) -> None:
+
+        points = list[ColorPoint]()
+        for _ in range(self.count):
+            x = random()
+            y = random()
+            points.append(ColorPoint(x, y, color_mode.get_color(x, y)))
+
+        # points = [
+        #     ColorPoint(0.3, 0.2, FloatColor(1, 0, 0)),
+        #     ColorPoint(0.8, 0.45, FloatColor(0, 1, 0)),
+        #     ColorPoint(0.25, 0.75, FloatColor(0, 0, 1)),
+        # ]
+
+        decision_lines = dict[ColorPoint, list[LineSegment]]()
+
+        for (p1, p2) in itertools.combinations(points, 2):
+            line = Line.get_decision_boundary(p1, p2).limit(1, 1)
+
+            if p1 not in decision_lines:
+                decision_lines[p1] = []
+            if p2 not in decision_lines:
+                decision_lines[p2] = []
+
+            decision_lines[p1].append(line)
+            decision_lines[p2].append(line)
+
+            if self.draw_edges:
+                context.move_to(*(line.point_a * Point(width, height)).as_tuple())
+                context.line_to(*(line.point_b * Point(width, height)).as_tuple())
+                context.set_source_rgb(0.5, 0.5, 0.5)
+                context.stroke()
+                logging.debug(f"Drawing {line}")
+
+        for (p, lines) in decision_lines.items():
+            polygon = Polygon.from_segments(p, lines)
+            # The blue polygon is has one line that is being reduced to a single point in the reduction step
+            self._draw_polygon(context, p, polygon, width, height)
+
         if self.draw_centers:
-            for point in self.points:
-                context.set_source_rgb(0, 0, 0)
-                context.arc(point.x, point.y, 7, 0, 360)
-                context.fill()
-                context.set_source_rgb(*point.color.to_tuple())
-                context.arc(point.x, point.y, 5, 0, 360)
-                context.fill()
+            for point in points:
+                self._draw_center(context, point, width, height)

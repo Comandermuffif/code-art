@@ -63,15 +63,15 @@ class ClusterBinaryDrawMode(DrawMode):
         self._distance_lookup = None
 
     def _get_nearest_point(self, point:Point) -> tuple[ColorPoint, float]:
-        return self._distance_lookup.get_nearest(point)
-        # distances = [
-        #     (other_point, point.distance(other_point))
-        #     for other_point in self.points
-        #     if other_point != point
-        # ]
+        # return self._distance_lookup.get_nearest(point)
+        distances = [
+            (other_point, point.distance(other_point))
+            for other_point in self.points
+            if other_point != point
+        ]
 
-        # distances = sorted(distances, key=lambda x: x[1])
-        # return distances[0]
+        distances = sorted(distances, key=lambda x: x[1])
+        return distances[0]
 
     def _rect_colors(self, rect:Rect) -> list[ColorPoint]:
         found_colors = set[ColorPoint]()
@@ -110,7 +110,7 @@ class ClusterBinaryDrawMode(DrawMode):
             point.x = point.x * width
             point.y = point.y * height
 
-        self._distance_lookup = DistanceLookup(self.points)
+        # self._distance_lookup = DistanceLookup(self.points)
 
         start_rect = Rect(0, 0, width, height)
         self._draw_rect(context, start_rect)
