@@ -26,15 +26,13 @@ from color_modes.sequence import SequenceColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
-from draw_modes.cluster_smart import SmartClusterDrawMode
-from draw_modes.cluster_binary import ClusterBinaryDrawMode
-from draw_modes.cluster_test import ClusterTestDrawMode
 from draw_modes.lines import LinesDrawMode
 from draw_modes.overlapping_circles import OverlappingCirclesDrawMode
 from draw_modes.splines import SpinesDrawMode
 from draw_modes.squares import SquaresDrawMode
 from draw_modes.text import TextDrawMode
 from draw_modes.triangles import TrianglesDrawMode
+from draw_modes.voronoi import VoronoiDrawMode
 
 from models import FloatColor
 
@@ -130,8 +128,8 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Color Mode:").grid(column=0, row=1)
         self.color_modes = {
             x.get_name(): x for x in list[type[ColorMode]]([
-                SequenceColorMode,
                 GradientColorMode,
+                SequenceColorMode,
                 ClusterColorMode,
                 InvertColorMode,
                 RandomColorMode,
@@ -155,9 +153,7 @@ class OptionsFrame(tkinter.Frame):
         tkinter.Label(self, text="Draw Mode:").grid(column=0, row=4)
         self.draw_modes = {
             x.get_name(): x for x in list[type[DrawMode]]([
-                SmartClusterDrawMode,
-                ClusterTestDrawMode,
-                ClusterBinaryDrawMode,
+                VoronoiDrawMode,
                 TrianglesDrawMode,
                 CirclesDrawMode,
                 SquaresDrawMode,
