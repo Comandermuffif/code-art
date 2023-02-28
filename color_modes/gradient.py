@@ -15,18 +15,39 @@ class GradientColorMode(ColorMode):
             'angle': ("Angle (Deg)", float, 45),
             'subcount': ("Subcount", int, 2),
             'divergance': ("Divergance", float, 0),
+            'rand_mode': ("Random Mode", str, "normal")
         }
 
     def __init__(self, colors:list[FloatColor], *args, **kwargs):
         self.angle = float(kwargs["angle"])
         self.subcount = int(kwargs["subcount"])
         self.divergance = float(kwargs["divergance"])
+        self.rand_mode = str(kwargs["rand_mode"])
         self.full_colors = self.get_subcolors(colors, self.subcount)
 
         self._weight_x = math.cos(math.radians(self.angle)) * math.sqrt(2)
         self._weight_y = math.sin(math.radians(self.angle)) * math.sqrt(2)
 
     def get_color(self, x:float, y:float) -> FloatColor:
+        translated_point = self._translate_point(x, y)
+        buckets = len(self.full_colors)
+        bucket_index = math.floor(sum(translated_point) * buckets / 2 + random.normalvariate(0, self.divergance))
+        bucket_index = max(0, min(buckets - 1, bucket_index))
+        return self.full_colors[bucket_index]
+
+    def _translate_point(self, x:float, y:float) -> tuple[float, float]:
+        weight_x = abs(self._weight_x)
+        weight_y = abs(self._weight_y)
+
+        if self._weight_x < 0:
+            x = (x - 0.5) * -1 + 0.5
+
+        if self._weight_y < 0:
+            y = (y - 0.5) * -1 + 0.5
+
+        return (x * weight_x, y * weight_y)
+
+    def get_color_old(self, x:float, y:float) -> FloatColor:
         buckets = len(self.full_colors)
 
         weight_x = abs(self._weight_x)

@@ -1,19 +1,11 @@
-from abc import abstractclassmethod, abstractmethod
+from abc import abstractmethod
 
-from models import FloatColor
+from models import FloatColor, Setting
 
 class ColorMode(object):
-    @abstractclassmethod
-    def get_name(self) -> str:
-        pass
-
-    @abstractclassmethod
-    def get_option_types(self) -> dict[str, tuple[str, type, object]]:
-        pass
-
-    @abstractmethod
-    def __init__(self, colors:list[FloatColor], *args, **kwargs):
-        pass
+    def __init__(self, name:str, settings:list[Setting]):
+        self.name = name
+        self.settings = settings
 
     @abstractmethod
     def get_color(self, x:float, y:float) -> FloatColor:
