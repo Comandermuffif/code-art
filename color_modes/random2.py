@@ -5,9 +5,8 @@ from models import FloatColor, StringSetting
 
 class Random2ColorMode(ColorMode):
     def __init__(self):
-        self.color = StringSetting("color", "Color", "ffffff,000000")
-        self.mode = StringSetting("mode", "Mode", "random")
-        super().__init__("Random2", [self.color, self.mode])
+        self.color = StringSetting("color", "Color: ", "ffffff,000000")
+        super().__init__("Random2", [self.color])
         self.index = 0
 
     def get_color(self, x: float, y: float) -> FloatColor:

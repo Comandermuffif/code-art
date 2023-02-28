@@ -21,7 +21,7 @@ from color_modes import ColorMode
 from color_modes.random2 import Random2ColorMode
 from color_modes.sequence2 import Sequence2ColorMode
 
-from models.ui import ColorModeVar
+from models.ui import ColorModeVar, SettingsFrame
 
 class MainWindow(tkinter.Tk):
     def __init__(self, *args, **kwargs):
@@ -45,24 +45,24 @@ class MainWindow(tkinter.Tk):
         tkinter.Button(top_row, text="Save", command=self._save).grid(row=0, column=2)
         tkinter.Button(top_row, text="Reset", command=self._reset).grid(row=0, column=3)
 
-        color_modes = list[ColorMode]([
-            Random2ColorMode(top_row),
-            Sequence2ColorMode(top_row),
+        self.color_modes = list[ColorMode]([
+            Random2ColorMode(),
+            # Sequence2ColorMode(),
         ])
-        self.color_modes = color_modes
-
-        for color_mode in color_modes:
-            color_mode.grid(row=2, column=0)
-            if color_mode != color_modes[0]:
-                color_mode.grid_remove()
 
         tkinter.Label(top_row, text="Color Mode:").grid(row=1, column=0)
-        color_mode_var = ColorModeVar(self, color_modes[0], "color_mode")
-        tkinter.OptionMenu(top_row, color_mode_var, *color_modes, command=self._color_mode_changed).grid(row=1, column=1, columnspan=2)
+        color_mode_var = ColorModeVar(self, self.color_modes[0], "color_mode")
+        tkinter.OptionMenu(top_row, color_mode_var, *self.color_modes, command=self._color_mode_changed).grid(row=1, column=1, columnspan=2)
         self.color_mode_var = color_mode_var
 
+        current_row = 2
+        for color_mode in self.color_modes:
+            settings_frame = SettingsFrame(color_mode.settings, top_row)
+            settings_frame.grid(row=current_row, column=0)
+            current_row += 1
+
         return top_row
-    
+
     def _draw(self):
         if self.image:
             self.image.destroy()
@@ -107,11 +107,7 @@ class MainWindow(tkinter.Tk):
         pass
 
     def _color_mode_changed(self, *args, **kwargs):
-        current_setting = self.color_mode_var.get()
-
-        for color_mode in [x for x in self.color_modes if x != current_setting]:
-            color_mode.grid_remove()
-        current_setting.grid()
+        pass
 
 def main():
     arguments = docopt.docopt(__doc__, version='v0.0.0')
