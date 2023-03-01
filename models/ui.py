@@ -1,73 +1,59 @@
 from __future__ import annotations
+from abc import abstractmethod
 
 import tkinter
 
-from color_modes import ColorMode
-from models import MultiChoiceSetting, Setting, StringSetting
+class Setting(tkinter.Frame):
+    def __init__(self, key:str, displayName:str):
+        super().__init__()
+        self.key = key
+        self.displayName = displayName
+        tkinter.Label(self, text=displayName).grid(row=0, column=0)
 
-class ColorModeVar(tkinter.Variable):
-    def __init__(self, master=None, value:ColorMode=None, name=None):
-        super().__init__(master, value, name)
-        self.set(value)
+    @abstractmethod
+    def get(self) -> object:
+        pass
 
-    def set(self, value) -> None:
-        print(f"Setting {value} with type {type(value)}")
-        if value != None and not isinstance(value, ColorMode):
-            raise ValueError()
-        self.color_mode = value
+    @abstractmethod
+    def set(self, value:object) -> None:
+        pass
 
-    def get(self) -> ColorMode:
-        print(f"Getting {self.color_mode} with type {type(self.color_mode)}")
-        return self.color_mode
+class StringSetting(Setting):
+    def __init__(self, key: str, displayName: str, initialValue:str=None):
+        super().__init__(key, displayName)
+        self._var = tkinter.StringVar(value=initialValue)
+        tkinter.Entry(self, textvariable=self._var).grid(row=0, column=1)
 
-class StringSettingFrame(tkinter.Frame):
-    def __init__(self, setting:StringSetting, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        tkinter.Label(self, text=setting.displayName).grid(row=0, column=0)
+    def get(self) -> str:
+        return self._var.get()
 
-        var = tkinter.StringVar(value=setting.get())
-        tkinter.Entry(self, textvariable=var).grid(row=0, column=1)
+    def set(self, value:str):
+        self._var.set(value)
 
-        def _read(a, b, c):
-            print("read")
-            return setting.get()
+class MultiChoiceSetting(Setting):
+    def __init__(self, key: str, displayName:str, initialValueIndex:int=-1, options:list[str]=[]):
+        super().__init__(key, displayName)
+        self.index = initialValueIndex
+        self.options = options
 
-        def _write(var, value, mode):
-            print("write")
-            setting.set(value)
+    def get(self) -> str:
+        return self.options[self.index]
 
-        var.trace_add("read", _read)
-        var.trace_add("write", _write)
-
-class MultiChoiceSettingFrame(tkinter.Frame):
-    def __init__(self, setting:MultiChoiceSetting, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        tkinter.Label(self, text=setting.displayName).grid(row=0, column=0)
-
-        var = tkinter.StringVar(value=setting.get())
-        tkinter.OptionMenu(self, var, setting.get(), *setting.options).grid(row=0, column=1)
-        # tkinter.Entry(self, textvariable=var).grid(column=1)
-
-        def _read(a, b, c):
-            return setting.get()
-
-        def _write(var, value, mode):
-            setting.set(value)
-
-        var.trace_add("read", _read)
-        var.trace_add("write", _write)
+    def set(self, value:str):
+        self.index = self.options.index(value)
 
 class SettingsFrame(tkinter.Frame):
-    def __init__(self, settings:list[Setting], *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        index = 0
+    def __init__(self, master:tkinter.BaseWidget, name:str, settings:list[Setting], *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.name = name
+        row = 0
+        self._settings = dict[str, object]()
         for setting in settings:
-            if type(setting) is StringSetting:
-                StringSettingFrame(setting, self).grid(row=index)
+            setting.grid(row=row, column=1)
+            row += 1
 
-            if type(setting) is MultiChoiceSetting:
-                MultiChoiceSettingFrame(setting, self).grid(row=index)
+    def __repr__(self) -> str:
+        return self.name
 
-            index += 1
-
+    def __str__(self) -> str:
+        return self.name

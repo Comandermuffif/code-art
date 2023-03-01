@@ -112,39 +112,3 @@ class ColorPoint(Point):
     def __init__(self, x:float, y:float, color:FloatColor):
         super().__init__(x, y)
         self.color:FloatColor = color
-
-class Setting(object):
-    def __init__(self, key:str, displayName:str):
-        self.key = key
-        self.displayName = displayName
-
-    @abstractmethod
-    def get(self) -> object:
-        pass
-
-    @abstractmethod
-    def set(self, value:object) -> None:
-        pass
-
-class StringSetting(Setting):
-    def __init__(self, key: str, displayName: str, initialValue:str=None):
-        super().__init__(key, displayName)
-        self._value = initialValue
-
-    def get(self) -> str:
-        return self._value
-
-    def set(self, value:str):
-        self._value = value
-
-class MultiChoiceSetting(Setting):
-    def __init__(self, key: str, displayName:str, initialValueIndex:int=-1, options:list[str]=[]):
-        super().__init__(key, displayName)
-        self.index = initialValueIndex
-        self.options = options
-
-    def get(self) -> str:
-        return self.options[self.index]
-
-    def set(self, value:str):
-        self.index = self.options.index(value)

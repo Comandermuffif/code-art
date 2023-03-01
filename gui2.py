@@ -19,9 +19,22 @@ from PIL import Image, ImageTk
 
 from color_modes import ColorMode
 from color_modes.random2 import Random2ColorMode
-from color_modes.sequence2 import Sequence2ColorMode
+# from color_modes.sequence2 import Sequence2ColorMode
 
-from models.ui import ColorModeVar, SettingsFrame
+class ColorModeVar(tkinter.Variable):
+    def __init__(self, master=None, value:ColorMode=None, name=None):
+        super().__init__(master, value, name)
+        self.set(value)
+
+    def set(self, value) -> None:
+        print(f"Setting {value} with type {type(value)}")
+        if value != None and not isinstance(value, ColorMode):
+            raise ValueError()
+        self.color_mode = value
+
+    def get(self) -> ColorMode:
+        print(f"Getting {self.color_mode} with type {type(self.color_mode)}")
+        return self.color_mode
 
 class MainWindow(tkinter.Tk):
     def __init__(self, *args, **kwargs):
@@ -46,7 +59,7 @@ class MainWindow(tkinter.Tk):
         tkinter.Button(top_row, text="Reset", command=self._reset).grid(row=0, column=3)
 
         self.color_modes = list[ColorMode]([
-            Random2ColorMode(),
+            Random2ColorMode(top_row),
             # Sequence2ColorMode(),
         ])
 
@@ -57,8 +70,7 @@ class MainWindow(tkinter.Tk):
 
         current_row = 2
         for color_mode in self.color_modes:
-            settings_frame = SettingsFrame(color_mode.settings, top_row)
-            settings_frame.grid(row=current_row, column=0)
+            color_mode.grid(row=current_row, column=0, columnspan=2)
             current_row += 1
 
         return top_row
