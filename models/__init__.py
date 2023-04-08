@@ -57,6 +57,24 @@ class FloatColor():
         parts = tuple(int(input[i:i+2], 16) for i in (0, 2, 4))
         return FloatColor(parts[0]/255, parts[1]/255, parts[2]/255)
 
+    @classmethod
+    def get_subcolors(cls, colors:list[FloatColor], subcount:int) -> list[FloatColor]:
+        full_colors = list()
+
+        for i in range(len(colors) - 1):
+            current_color = colors[i]
+            full_colors.append(current_color)
+
+            next_color = colors[i + 1]
+
+            color_delta = next_color - current_color
+
+            for j in range(subcount):
+                full_colors.append(current_color + (color_delta * ((j + 1) / (subcount + 1))))
+
+        full_colors.append(colors[-1])
+        return full_colors
+
 class Point(object):
     def __init__(self, x:float, y:float):
         self.x = x

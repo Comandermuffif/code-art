@@ -21,7 +21,7 @@ class GradientColorMode(ColorMode):
         self.angle = float(kwargs["angle"])
         self.subcount = int(kwargs["subcount"])
         self.divergance = float(kwargs["divergance"])
-        self.full_colors = self.get_subcolors(colors, self.subcount)
+        self.full_colors = FloatColor.get_subcolors(colors, self.subcount)
 
         self._weight_x = math.cos(math.radians(self.angle)) * math.sqrt(2)
         self._weight_y = math.sin(math.radians(self.angle)) * math.sqrt(2)
@@ -51,33 +51,3 @@ class GradientColorMode(ColorMode):
             if max_prob == color_prob[i]:
                 return self.full_colors[i]
         return (0, 0, 0)
-
-    @classmethod
-    def get_subcolors(cls, colors:list[FloatColor], subcount:int) -> list[FloatColor]:
-        full_colors = list()
-
-        for i in range(len(colors) - 1):
-            current_color = colors[i]
-            full_colors.append(current_color)
-
-            next_color = colors[i + 1]
-
-            color_delta = next_color - current_color
-
-            for j in range(subcount):
-                full_colors.append(current_color + (color_delta * ((j + 1) / (subcount + 1))))
-
-        full_colors.append(colors[-1])
-        return full_colors
-
-    @classmethod
-    def translate_point(cls, x:float, y:float, angleDeg:float) -> tuple[float, float]:
-
-        # (0, 0, 0) => (0 , 0)
-        # (0, 0, 90) => (1, 0)
-
-        center = (0.5, 0.5)
-        new_x = (x - center[0]) * math.cos(math.radians(angleDeg)) - (y - center[1]) * math.sin(math.radians(angleDeg)) + center[0]
-        new_y = (x - center[0]) * math.sin(math.radians(angleDeg)) + (y - center[1]) * math.cos(math.radians(angleDeg)) + center[1]
-
-        return (new_x, new_y)
