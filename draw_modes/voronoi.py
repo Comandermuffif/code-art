@@ -11,14 +11,8 @@ class VoronoiDrawMode(DrawMode):
     def get_name(cls):
         return "Voronoi"
 
-    @classmethod
-    def get_option_types(cls) -> dict[str, tuple[str, type, object]]:
-        return {
-            'count': ("Count", int, 3000),
-        }
-
-    def __init__(self, *args, **kwargs):
-        self.count = kwargs["count"]
+    def __init__(self, count:int=3000):
+        self.count = count
 
     def draw(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int) -> None:
 

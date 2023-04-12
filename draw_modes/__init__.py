@@ -9,10 +9,6 @@ class DrawMode(object):
     def get_name(self):
         pass
 
-    @abstractclassmethod
-    def get_option_types(self) -> dict[str, tuple[str, type, object]]:
-        pass
-
     @abstractmethod
     def __init__(self, *args, **kwargs):
         pass

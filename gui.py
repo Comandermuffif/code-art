@@ -20,6 +20,8 @@ import tkinter
 from color_modes import ColorMode
 from color_modes.cluster import ClusterColorMode
 from color_modes.invert import InvertColorMode
+from color_modes.modify.avg import AvgColorMode
+from color_modes.modify.normal import NormalColorMode
 from color_modes.random import RandomColorMode
 from color_modes.gradient import GradientColorMode
 from color_modes.sequence import SequenceColorMode
@@ -69,6 +71,17 @@ class DrawUI(tkinter.Tk):
         self.command.insert(1.0, "Voronoi(Gradient([fff100,ff8c00,e81123,ec008c,68217a,00188f,00bcf2,00b294,009e49,bad80a]))")
         self.command.grid(row=1, column=0, columnspan=3)
 
+        self.drawMode = VoronoiDrawMode(5000)
+        self.colorMode = NormalColorMode(
+            GradientColorMode(
+                FloatColor.get_subcolors(
+                    [FloatColor.from_hex(x) for x in "fff100,ff8c00,e81123,ec008c,68217a,00188f,00bcf2,00b294,009e49,bad80a".split(',')],
+                    2
+                )
+            ),
+            0.07
+        )
+
     def _clearImage(self):
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
         self.context = cairo.Context(self.surface)
@@ -92,29 +105,29 @@ class DrawUI(tkinter.Tk):
         # Reset the operator, it case something changed it (invert....)
         self.context.set_operator(cairo.Operator.OVER)
 
-        command = parse(self.command.get(1.0, 'end'))
-        if (not isinstance(command, FuncToken)):
-            return
-        drawMode = self.knownDrawModes[command.name](count=3000)
+        # command = parse(self.command.get(1.0, 'end'))
+        # if (not isinstance(command, FuncToken)):
+        #     return
+        # drawMode = self.knownDrawModes[command.name](count=3000)
 
-        if (len(command.args) < 1):
-            return
+        # if (len(command.args) < 1):
+        #     return
         
-        colorModeToken = command.args[0]
-        if (not isinstance(colorModeToken, FuncToken)):
-            return
+        # colorModeToken = command.args[0]
+        # if (not isinstance(colorModeToken, FuncToken)):
+        #     return
         
-        colorsArray = colorModeToken.args[0]
-        if (not isinstance(colorsArray, ArrayToken)):
-            return
-        colors = [FloatColor.from_hex(x.value) for x in colorsArray.values if isinstance(x, ValueToken)]
-        colorMode = self.knownColorModes[colorModeToken.name](colors, angle=45, divergance=0.1)
+        # colorsArray = colorModeToken.args[0]
+        # if (not isinstance(colorsArray, ArrayToken)):
+        #     return
+        # colors = [FloatColor.from_hex(x.value) for x in colorsArray.values if isinstance(x, ValueToken)]
+        # colorMode = self.knownColorModes[colorModeToken.name](colors, angle=45, divergance=0.1)
 
         start_time = datetime.datetime.now()
 
-        drawMode.draw(
+        self.drawMode.draw(
             self.context,
-            colorMode,
+            self.colorMode,
             self.width,
             self.height,
         )
