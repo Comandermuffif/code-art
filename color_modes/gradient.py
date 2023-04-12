@@ -19,15 +19,14 @@ class GradientColorMode(ColorMode):
 
     def __init__(self, colors:list[FloatColor], *args, **kwargs):
         self.angle = float(kwargs["angle"])
-        self.subcount = int(kwargs["subcount"])
         self.divergance = float(kwargs["divergance"])
-        self.full_colors = FloatColor.get_subcolors(colors, self.subcount)
+        self.colors = colors
 
         self._weight_x = math.cos(math.radians(self.angle)) * math.sqrt(2)
         self._weight_y = math.sin(math.radians(self.angle)) * math.sqrt(2)
 
     def get_color(self, x:float, y:float) -> FloatColor:
-        buckets = len(self.full_colors)
+        buckets = len(self.colors)
 
         weight_x = abs(self._weight_x)
         weight_y = abs(self._weight_y)
@@ -49,5 +48,5 @@ class GradientColorMode(ColorMode):
         max_prob = min(color_prob)
         for i in range(buckets):
             if max_prob == color_prob[i]:
-                return self.full_colors[i]
+                return self.colors[i]
         return (0, 0, 0)
