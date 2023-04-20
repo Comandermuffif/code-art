@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import atan2, dist
+import math
 
 class DrawModes():
     random = "random"
@@ -52,13 +53,20 @@ class FloatColor():
         )
 
     @classmethod
-    def from_hex(cls, input:str) -> FloatColor:
+    def fromHex(cls, input:str) -> FloatColor:
         input = input.strip().strip('#')
         parts = tuple(int(input[i:i+2], 16) for i in (0, 2, 4))
         return FloatColor(parts[0]/255, parts[1]/255, parts[2]/255)
 
     @classmethod
-    def get_subcolors(cls, colors:list[FloatColor], subcount:int) -> list[FloatColor]:
+    def fromHexList(cls, input:str) -> list[FloatColor]:
+        return [
+            cls.fromHex(x)
+            for x in input.split(',')
+        ]
+
+    @classmethod
+    def getSubcolors(cls, colors:list[FloatColor], subcount:int) -> list[FloatColor]:
         full_colors = list()
 
         for i in range(len(colors) - 1):
@@ -129,6 +137,12 @@ class Point(object):
         if type(other) is Point:
             return self.x == other.x and self.y == other.y
         return False
+
+    def rotateAround(self, other:Point, angleRad:float) -> Point:
+        return Point(
+            math.cos(angleRad) * (self.x - other.x) - math.sin(angleRad) * (self.y - other.y) + other.x,
+            math.sin(angleRad) * (self.x - other.x) + math.cos(angleRad) * (self.y - other.y) + other.y
+        )
 
 class ColorPoint(Point):
     def __init__(self, x:float, y:float, color:FloatColor):

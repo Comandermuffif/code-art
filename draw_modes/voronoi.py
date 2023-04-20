@@ -7,10 +7,6 @@ from color_modes import ColorMode
 from draw_modes import DrawMode
 
 class VoronoiDrawMode(DrawMode):
-    @classmethod
-    def get_name(cls):
-        return "Voronoi"
-
     def __init__(self, count:int=3000):
         self.count = count
 
@@ -59,7 +55,7 @@ class VoronoiDrawMode(DrawMode):
 
             # Get the point for the region
             point = region_points[region_index]
-            color = color_mode.get_color(point[0], point[1])
+            color = color_mode.getColor(point[0], point[1])
             context.set_source_rgb(color.r, color.g, color.b)
             context.stroke_preserve()
             context.fill()

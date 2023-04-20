@@ -18,39 +18,24 @@ import docopt
 import tkinter
 
 from color_modes import ColorMode
-from color_modes.cluster import ClusterColorMode
-from color_modes.invert import InvertColorMode
-from color_modes.modify.avg import AvgColorMode
-from color_modes.modify.normal import NormalColorMode
-from color_modes.random import RandomColorMode
 from color_modes.gradient import GradientColorMode
-from color_modes.sequence import SequenceColorMode
+from color_modes.modify.normal import NormalColorMode
+from color_modes.modify.rotate import RotateColorMode
+from color_modes.fire import FireColorMode
+from color_modes.grid import GridColorMode
+from color_modes.linear_gradient import LinearGradientColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
-from draw_modes.lines import LinesDrawMode
-from draw_modes.overlapping_circles import OverlappingCirclesDrawMode
-from draw_modes.splines import SpinesDrawMode
 from draw_modes.squares import SquaresDrawMode
-from draw_modes.text import TextDrawMode
 from draw_modes.triangles import TrianglesDrawMode
 from draw_modes.voronoi import VoronoiDrawMode
 
 from models import FloatColor
-from models.input import ValueToken, parse, ArrayToken, FuncToken
 
 from PIL import Image, ImageTk
 
 class DrawUI(tkinter.Tk):
-    knownDrawModes = dict[str, type[DrawMode]]({
-        "Voronoi": VoronoiDrawMode,
-        "Circles": CirclesDrawMode
-    })
-
-    knownColorModes = dict[str, type[ColorMode]]({
-        "Gradient": GradientColorMode
-    })
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.width, self.height = 1024, 1024
@@ -67,20 +52,9 @@ class DrawUI(tkinter.Tk):
         tkinter.Button(self, text="Clear", command=self._clearImage).grid(column=1, row=0)
         tkinter.Button(self, text="Save", command=self._saveImage).grid(column=2, row=0)
 
-        self.command = tkinter.Text(self, height=1)
-        self.command.insert(1.0, "Voronoi(Gradient([fff100,ff8c00,e81123,ec008c,68217a,00188f,00bcf2,00b294,009e49,bad80a]))")
-        self.command.grid(row=1, column=0, columnspan=3)
-
-        self.drawMode = VoronoiDrawMode(5000)
-        self.colorMode = NormalColorMode(
-            GradientColorMode(
-                FloatColor.get_subcolors(
-                    [FloatColor.from_hex(x) for x in "fff100,ff8c00,e81123,ec008c,68217a,00188f,00bcf2,00b294,009e49,bad80a".split(',')],
-                    2
-                )
-            ),
-            0.07
-        )
+        # "ffffff,fff100,ff8c00,e81123,ec008c,68217a,00188f,00bcf2,00b294,009e49,bad80a,000000"
+        self.colorMode:ColorMode = NormalColorMode(RotateColorMode(GradientColorMode(FloatColor.getSubcolors(FloatColor.fromHexList("000000,000000,ff8c00,ffffff,00b294,000000,000000"), 7))), 0.03, 0.03)
+        self.drawMode:DrawMode = VoronoiDrawMode(250)
 
     def _clearImage(self):
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
@@ -102,41 +76,20 @@ class DrawUI(tkinter.Tk):
         if self.image:
             self.image.destroy()
 
-        # Reset the operator, it case something changed it (invert....)
-        self.context.set_operator(cairo.Operator.OVER)
-
-        # command = parse(self.command.get(1.0, 'end'))
-        # if (not isinstance(command, FuncToken)):
-        #     return
-        # drawMode = self.knownDrawModes[command.name](count=3000)
-
-        # if (len(command.args) < 1):
-        #     return
-        
-        # colorModeToken = command.args[0]
-        # if (not isinstance(colorModeToken, FuncToken)):
-        #     return
-        
-        # colorsArray = colorModeToken.args[0]
-        # if (not isinstance(colorsArray, ArrayToken)):
-        #     return
-        # colors = [FloatColor.from_hex(x.value) for x in colorsArray.values if isinstance(x, ValueToken)]
-        # colorMode = self.knownColorModes[colorModeToken.name](colors, angle=45, divergance=0.1)
-
         start_time = datetime.datetime.now()
-
         self.drawMode.draw(
             self.context,
             self.colorMode,
             self.width,
             self.height,
         )
-
         time_elapsed = datetime.datetime.now() - start_time
+        logging.info("Draw took %f seconds", time_elapsed.total_seconds())
 
-        logging.info(f"Render took {time_elapsed.total_seconds()} seconds")
-
+        start_time = datetime.datetime.now()
         self._setImage()
+        time_elapsed = datetime.datetime.now() - start_time
+        logging.info("Set took %f seconds", time_elapsed.total_seconds())
 
 def main():
     arguments = docopt.docopt(__doc__, version='v0.0.0')

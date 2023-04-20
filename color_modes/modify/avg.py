@@ -15,8 +15,8 @@ class AvgColorMode(ColorMode):
         self.colorModeA = a
         self.colorModeB = b
 
-    def get_color(self, x:float, y:float) -> FloatColor:
-        colorA = self.colorModeA.get_color(x, y)
-        colorB = self.colorModeB.get_color(x, y)
+    def getColor(self, x:float, y:float) -> FloatColor:
+        colorA = self.colorModeA.getColor(x, y)
+        colorB = self.colorModeB.getColor(x, y)
 
         return (colorA + colorB) * 0.5
