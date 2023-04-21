@@ -16,6 +16,9 @@ import string
 import cairo
 import docopt
 import tkinter
+import yaml
+import json
+import jsonschema
 
 from color_modes import ColorMode
 from color_modes.gradient import GradientColorMode
@@ -35,6 +38,73 @@ from models import FloatColor
 
 from PIL import Image, ImageTk
 
+class InputParser(object):
+    knownDrawMode = {
+        'circles': CirclesDrawMode,
+        'squares': SquaresDrawMode,
+        'triangles': TrianglesDrawMode,
+        'voronoi': VoronoiDrawMode,
+    }
+
+    knownColorModes = {
+        'gradient': GradientColorMode,
+        'normal': NormalColorMode,
+        'rotate': RotateColorMode,
+        'linearGradient': LinearGradientColorMode
+    }
+
+    with open('input.schema.json') as stream:
+        inputSchema = json.load(stream)
+
+    @classmethod
+    def parse(cls, filename:str) -> tuple[ColorMode, DrawMode]:
+        colorMode:ColorMode = None
+        drawMode:DrawMode = None
+
+        with open(filename, 'r') as stream:
+            data = yaml.safe_load(stream)
+
+        try:
+            jsonschema.validate(data, cls.inputSchema)
+        except jsonschema.ValidationError as error:
+            logging.exception("Failed to validate %s", filename, exc_info=error)
+            return (colorMode, drawMode)
+
+        if not isinstance(data, dict) or 'drawMode' not in data or 'colorMode' not in data:
+            return (colorMode, drawMode)
+
+        drawData = data["drawMode"]
+        colorData = data["colorMode"]
+
+        if not isinstance(drawData, dict) or not isinstance(colorData, dict):
+            return (colorMode, drawMode)
+        
+        drawMode = cls._parseValue(drawData)
+        colorMode = cls._parseValue(colorData)
+
+        return (colorMode, drawMode)
+
+    @classmethod
+    def _parseValue(cls, value) -> object:
+        if isinstance(value, str):
+            if value.startswith('#') and len(value) == 7:
+                return FloatColor.fromHex(value)
+        if isinstance(value, list):
+            return [cls._parseValue(x) for x in value]
+        if isinstance(value, dict):
+            if len(value) == 1:
+                (key, subValue) = next(iter(value.items()))
+                if key in cls.knownColorModes:
+                    return cls.knownColorModes[key](**cls._parseValue(subValue))
+                elif key in cls.knownDrawMode:
+                    return cls.knownDrawMode[key](**cls._parseValue(subValue))
+                elif key == "getSubcolors":
+                    return FloatColor.getSubcolors(**cls._parseValue(subValue))
+            return {
+                k: cls._parseValue(v) for k,v in value.items()
+            }
+        return value
+
 class DrawUI(tkinter.Tk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -51,10 +121,6 @@ class DrawUI(tkinter.Tk):
         tkinter.Button(self, text="Generate", command=self.draw).grid(column=0, row=0)
         tkinter.Button(self, text="Clear", command=self._clearImage).grid(column=1, row=0)
         tkinter.Button(self, text="Save", command=self._saveImage).grid(column=2, row=0)
-
-        # "ffffff,fff100,ff8c00,e81123,ec008c,68217a,00188f,00bcf2,00b294,009e49,bad80a,000000"
-        self.colorMode:ColorMode = NormalColorMode(RotateColorMode(GradientColorMode(FloatColor.getSubcolors(FloatColor.fromHexList("000000,000000,ff8c00,ffffff,00b294,000000,000000"), 7))), 0.03, 0.03)
-        self.drawMode:DrawMode = VoronoiDrawMode(250)
 
     def _clearImage(self):
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
@@ -73,13 +139,18 @@ class DrawUI(tkinter.Tk):
         self.surface.write_to_png(f"generated/{color_mode}_{draw_mode}_{suffix}.png")
 
     def draw(self):
+        (colorMode, drawMode) = InputParser.parse("input.yml")
+
+        if colorMode == None or drawMode == None:
+            return
+
         if self.image:
             self.image.destroy()
 
         start_time = datetime.datetime.now()
-        self.drawMode.draw(
+        drawMode.draw(
             self.context,
-            self.colorMode,
+            colorMode,
             self.width,
             self.height,
         )

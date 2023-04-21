@@ -1,0 +1,122 @@
+{
+    "$id": "https://example.com/input.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Input",
+    "type": "object",
+    "properties": {
+        "drawMode": {
+            "type": "object",
+            "description": "The draw mode used to generate the image"
+        },
+        "colorMode": {
+            "$ref": "#/$defs/colorMode",
+            "description": "The color mode used by the draw mode to select colors"
+        }
+    },
+    "required": [
+        "drawMode",
+        "colorMode"
+    ],
+    "$defs": {
+        "colorMode": {
+            "oneOf": [
+                { "$ref": "#/$defs/rotateColorMode" },
+                { "$ref": "#/$defs/normalColorMode" },
+                { "$ref": "#/$defs/gradientColorMode" }
+            ]
+        },
+        "colors": {
+            "oneOf": [
+                { "type": "array", "items": { "$ref": "#/$defs/gradientColorMode" } },
+                { "$ref": "#/$defs/getSubcolors" }
+            ]
+        },
+        "color": {
+            "type": "string",
+            "description": "Hex color",
+            "pattern": "^#[a-f0-9]{6}"
+        },
+        "getSubcolors": {
+            "type": "object",
+            "title": "Subcolors",
+            "description": "Get a list of colors with a subset of colors between each",
+            "properties": {
+                "getSubcolors": {
+                    "type": "object",
+                    "properties": {
+                        "subcount": {
+                            "type": "integer",
+                            "description": "The number of colors to generate betwen input colors"
+                        },
+                        "colors": {
+                            "type": "array",
+                            "items": { "$ref": "#/$defs/color" }
+                        }
+                    }
+                }
+            }
+        },
+        "rotateColorMode": {
+            "type": "object",
+            "title": "Rotate Color Mode",
+            "description": "Rotate the image",
+            "required": ["rotate"],
+            "properties": {
+                "rotate": {
+                    "type": "object",
+                    "properties": {
+                        "angleDeg": {
+                            "type": "number",
+                            "description": "The angle to rotate the image by (in degrees)"
+                        },
+                        "child": { "$ref": "#/$defs/colorMode" }
+                    },
+                    "required": ["angleDeg","child"]
+                }
+            }
+        },
+        "normalColorMode": {
+            "type": "object",
+            "title": "Normal Dist Color Mode",
+            "description": "Randomize the input by a set divergance",
+            "required": ["normal"],
+            "properties": {
+                "normal": {
+                    "type": "object",
+                    "properties": {
+                        "xDivergance": {
+                            "type": "number",
+                            "description": "The angle to rotate the image by (in degrees)",
+                            "default": 0.07
+                        },
+                        "yDivergance": {
+                            "type": "number",
+                            "description": "The angle to rotate the image by (in degrees)",
+                            "default": 0.07
+                        },
+                        "child": { "$ref": "#/$defs/colorMode" }
+                    },
+                    "required": ["xDivergance","yDivergance","child"]
+                }
+            }
+        },
+        "gradientColorMode": {
+            "type": "object",
+            "title": "Gradient Color Mode",
+            "description": "Bucketed gradient from left to right",
+            "required": ["gradient"],
+            "properties": {
+                "gradient": {
+                    "type": "object",
+                    "properties": {
+                        "colors": {
+                            "$ref": "#/$defs/colors",
+                            "description": "The angle to rotate the image by (in degrees)"
+                        }
+                    },
+                    "required": ["colors"]
+                }
+            }
+        }
+    }
+}
