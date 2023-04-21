@@ -87,8 +87,10 @@ class InputParser(object):
     @classmethod
     def _parseValue(cls, value) -> object:
         if isinstance(value, str):
-            if value.startswith('#') and len(value) == 7:
-                return FloatColor.fromHex(value)
+            if value.startswith('#'):
+                parsedColor = FloatColor.fromHex(value)
+                if parsedColor != None:
+                    return parsedColor
         if isinstance(value, list):
             return [cls._parseValue(x) for x in value]
         if isinstance(value, dict):

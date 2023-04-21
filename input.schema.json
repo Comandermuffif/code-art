@@ -27,14 +27,14 @@
         },
         "colors": {
             "oneOf": [
-                { "type": "array", "items": { "$ref": "#/$defs/gradientColorMode" } },
+                { "type": "array", "items": { "$ref": "#/$defs/color" } },
                 { "$ref": "#/$defs/getSubcolors" }
             ]
         },
         "color": {
             "type": "string",
             "description": "Hex color",
-            "pattern": "^#[a-f0-9]{6}"
+            "pattern": "^#[a-f0-9]{6}|^#[a-f0-9]{8}"
         },
         "getSubcolors": {
             "type": "object",
@@ -111,7 +111,7 @@
                     "properties": {
                         "colors": {
                             "$ref": "#/$defs/colors",
-                            "description": "The angle to rotate the image by (in degrees)"
+                            "description": "The colors from left to right"
                         }
                     },
                     "required": ["colors"]

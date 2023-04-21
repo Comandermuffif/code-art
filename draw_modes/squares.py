@@ -16,6 +16,6 @@ class SquaresDrawMode(DrawMode):
             for count_y in range(self.count):
                 color = color_mode.getColor(count_x/self.count, count_y/self.count)
 
-                context.set_source_rgb(color.r, color.g, color.b)
+                context.set_source_rgba(*color.toTuple())
                 context.rectangle(floor(count_x * x_step), floor(count_y * y_step), ceil(x_step), ceil(y_step))
                 context.fill()

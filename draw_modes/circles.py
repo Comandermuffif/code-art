@@ -22,6 +22,6 @@ class CirclesDrawMode(DrawMode):
 
             radious = random.random() * (self.maxSize - self.minSize) + self.minSize
 
-            context.set_source_rgb(color.r, color.g, color.b)
+            context.set_source_rgba(*color.toTuple())
             context.arc(x, y, radious, 0, 360)
             context.fill()

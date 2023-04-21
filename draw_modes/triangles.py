@@ -29,7 +29,7 @@ class TrianglesDrawMode(DrawMode):
 
                 if count_y % 2 == 0:
                     color = color_mode.getColor((count_x + center_a[0])/self.count, (count_y + center_a[1])/self.count)
-                    context.set_source_rgb(color.r, color.g, color.b)
+                    context.set_source_rgba(*color.toTuple())
 
                     context.move_to((count_x + points_a[0][0]) * step, (count_y + points_a[0][1]) * step)
                     context.line_to((count_x + points_a[1][0]) * step, (count_y + points_a[1][1]) * step)
@@ -39,7 +39,7 @@ class TrianglesDrawMode(DrawMode):
                     context.stroke()
 
                     color = color_mode.getColor((count_x + center_b[0])/self.count, (count_y + center_b[1])/self.count)
-                    context.set_source_rgb(color.r, color.g, color.b)
+                    context.set_source_rgba(*color.toTuple())
 
                     context.move_to((count_x + points_b[0][0]) * step, (count_y + points_b[0][1]) * step)
                     context.line_to((count_x + points_b[1][0]) * step, (count_y + points_b[1][1]) * step)
@@ -49,7 +49,7 @@ class TrianglesDrawMode(DrawMode):
                     context.stroke()
                 else:
                     color = color_mode.getColor((count_x + center_a[0])/self.count, (count_y + center_a[1])/self.count)
-                    context.set_source_rgb(color.r, color.g, color.b)
+                    context.set_source_rgba(*color.toTuple())
 
                     context.move_to((count_x + points_a[0][0]) * step, (count_y + 1 - points_a[0][1]) * step)
                     context.line_to((count_x + points_a[1][0]) * step, (count_y + 1 - points_a[1][1]) * step)
@@ -59,7 +59,7 @@ class TrianglesDrawMode(DrawMode):
                     context.stroke()
 
                     color = color_mode.getColor((count_x + center_b[0])/self.count, (count_y + center_b[1])/self.count)
-                    context.set_source_rgb(color.r, color.g, color.b)
+                    context.set_source_rgba(*color.toTuple())
 
                     context.move_to((count_x + points_b[0][0]) * step, (count_y + 1 - points_b[0][1]) * step)
                     context.line_to((count_x + points_b[1][0]) * step, (count_y + 1 - points_b[1][1]) * step)

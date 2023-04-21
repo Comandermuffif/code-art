@@ -3,32 +3,29 @@ from __future__ import annotations
 from math import atan2, dist
 import math
 
-class DrawModes():
-    random = "random"
-    bucketed = "bucketed"
-    gradient = "gradient"
-
 class FloatColor():
-    def __init__(self, r:float, g:float, b:float):
+    def __init__(self, r:float, g:float, b:float, a:float=1):
         self.r = r
         self.g = g
         self.b = b
+        self.a = a
 
-    def to_hex(self):
+    def toHex(self):
         hex(int(self.g * 255))
-        return "#{:02x}{:02x}{:02x}".format(int(self.r * 255), int(self.g * 255), int(self.b * 255)).upper()
+        return "#{:02x}{:02x}{:02x}{:02x}".format(int(self.r * 255), int(self.g * 255), int(self.b * 255), int(self.a * 255)).upper()
 
-    def to_tuple(self) -> tuple[float, float, float]:
-        return (self.r, self.g, self.b)
+    def toTuple(self) -> tuple[float, float, float, float]:
+        return (self.r, self.g, self.b, self.a)
 
     def __repr__(self) -> str:
-        return self.to_hex()
+        return self.toHex()
 
     def __add__(self, other:FloatColor):
         return FloatColor(
             self.r + other.r,
             self.g + other.g,
             self.b + other.b,
+            self.a + other.a,
         )
 
     def __sub__(self, other:FloatColor):
@@ -36,6 +33,7 @@ class FloatColor():
             self.r - other.r,
             self.g - other.g,
             self.b - other.b,
+            self.a - other.a,
         )
 
     def __mul__(self, y:float):
@@ -43,6 +41,7 @@ class FloatColor():
             self.r * y,
             self.g * y,
             self.b * y,
+            self.a * y,
         )
 
     def __div__(self, y:float):
@@ -50,13 +49,20 @@ class FloatColor():
             self.r / y,
             self.g / y,
             self.b / y,
+            self.a / y,
         )
 
     @classmethod
     def fromHex(cls, input:str) -> FloatColor:
         input = input.strip().strip('#')
-        parts = tuple(int(input[i:i+2], 16) for i in (0, 2, 4))
-        return FloatColor(parts[0]/255, parts[1]/255, parts[2]/255)
+        if len(input) == 6:
+            parts = tuple(int(input[i:i+2], 16) for i in (0, 2, 4))
+            return FloatColor(parts[0]/255, parts[1]/255, parts[2]/255)
+        elif len(input) == 8:
+            parts = tuple(int(input[i:i+2], 16) for i in (0, 2, 4, 6))
+            return FloatColor(parts[0]/255, parts[1]/255, parts[2]/255, parts[3]/255)
+        else:
+            return None
 
     @classmethod
     def fromHexList(cls, input:str) -> list[FloatColor]:
@@ -143,8 +149,3 @@ class Point(object):
             math.cos(angleRad) * (self.x - other.x) - math.sin(angleRad) * (self.y - other.y) + other.x,
             math.sin(angleRad) * (self.x - other.x) + math.cos(angleRad) * (self.y - other.y) + other.y
         )
-
-class ColorPoint(Point):
-    def __init__(self, x:float, y:float, color:FloatColor):
-        super().__init__(x, y)
-        self.color:FloatColor = color
