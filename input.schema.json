@@ -22,7 +22,8 @@
             "oneOf": [
                 { "$ref": "#/$defs/rotateColorMode" },
                 { "$ref": "#/$defs/normalColorMode" },
-                { "$ref": "#/$defs/gradientColorMode" }
+                { "$ref": "#/$defs/gradientColorMode" },
+                { "$ref": "#/$defs/clampColorMode" }
             ]
         },
         "colors": {
@@ -34,7 +35,7 @@
         "color": {
             "type": "string",
             "description": "Hex color",
-            "pattern": "^#[a-f0-9]{6}|^#[a-f0-9]{8}"
+            "pattern": "^#[a-f0-9A-F]{6}|^#[a-f0-9A-F]{8}"
         },
         "getSubcolors": {
             "type": "object",
@@ -115,6 +116,21 @@
                         }
                     },
                     "required": ["colors"]
+                }
+            }
+        },
+        "clampColorMode": {
+            "type": "object",
+            "title": "Clamp Color Mode",
+            "description": "Clamp alpha channels",
+            "required": ["clamp"],
+            "properties": {
+                "clamp": {
+                    "type": "object",
+                    "properties": {
+                        "child": { "$ref": "#/$defs/colorMode" }
+                    },
+                    "required": ["child"]
                 }
             }
         }

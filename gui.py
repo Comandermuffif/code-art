@@ -10,23 +10,26 @@ Options:
 from __future__ import annotations
 import datetime
 import logging
+import os
 
-import random
-import string
 import cairo
 import docopt
-import tkinter
-import yaml
 import json
 import jsonschema
+import random
+import string
+import tkinter
+import typing
+import yaml
 
 from color_modes import ColorMode
-from color_modes.gradient import GradientColorMode
-from color_modes.modify.normal import NormalColorMode
-from color_modes.modify.rotate import RotateColorMode
 from color_modes.fire import FireColorMode
+from color_modes.gradient import GradientColorMode
 from color_modes.grid import GridColorMode
 from color_modes.linear_gradient import LinearGradientColorMode
+from color_modes.modify.clamp import ClampColorMode
+from color_modes.modify.normal import NormalColorMode
+from color_modes.modify.rotate import RotateColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
@@ -37,6 +40,7 @@ from draw_modes.voronoi import VoronoiDrawMode
 from models import FloatColor
 
 from PIL import Image, ImageTk
+
 
 class InputParser(object):
     knownDrawMode = {
@@ -50,39 +54,33 @@ class InputParser(object):
         'gradient': GradientColorMode,
         'normal': NormalColorMode,
         'rotate': RotateColorMode,
-        'linearGradient': LinearGradientColorMode
+        'linearGradient': LinearGradientColorMode,
+        'clamp': ClampColorMode,
     }
 
     with open('input.schema.json') as stream:
         inputSchema = json.load(stream)
 
     @classmethod
-    def parse(cls, filename:str) -> tuple[ColorMode, DrawMode]:
-        colorMode:ColorMode = None
-        drawMode:DrawMode = None
-
+    def parse(cls, filename: str) -> typing.Generator[tuple[ColorMode, DrawMode]]:
         with open(filename, 'r') as stream:
-            data = yaml.safe_load(stream)
+            for data in yaml.safe_load_all(stream):
+                try:
+                    jsonschema.validate(data, cls.inputSchema)
+                except jsonschema.ValidationError as error:
+                    logging.exception("Failed to validate %s", filename, exc_info=error)
+                    continue
 
-        try:
-            jsonschema.validate(data, cls.inputSchema)
-        except jsonschema.ValidationError as error:
-            logging.exception("Failed to validate %s", filename, exc_info=error)
-            return (colorMode, drawMode)
+                if not isinstance(data, dict) or 'drawMode' not in data or 'colorMode' not in data:
+                    continue
 
-        if not isinstance(data, dict) or 'drawMode' not in data or 'colorMode' not in data:
-            return (colorMode, drawMode)
+                drawData = data["drawMode"]
+                colorData = data["colorMode"]
 
-        drawData = data["drawMode"]
-        colorData = data["colorMode"]
+                if not isinstance(drawData, dict) or not isinstance(colorData, dict):
+                    continue
 
-        if not isinstance(drawData, dict) or not isinstance(colorData, dict):
-            return (colorMode, drawMode)
-        
-        drawMode = cls._parseValue(drawData)
-        colorMode = cls._parseValue(colorData)
-
-        return (colorMode, drawMode)
+                yield (cls._parseValue(colorData), cls._parseValue(drawData))
 
     @classmethod
     def _parseValue(cls, value) -> object:
@@ -103,7 +101,7 @@ class InputParser(object):
                 elif key == "getSubcolors":
                     return FloatColor.getSubcolors(**cls._parseValue(subValue))
             return {
-                k: cls._parseValue(v) for k,v in value.items()
+                k: cls._parseValue(v) for k, v in value.items()
             }
         return value
 
@@ -116,13 +114,35 @@ class DrawUI(tkinter.Tk):
 
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
         self.context = cairo.Context(self.surface)
-        self.image:tkinter.Label = None
+        self.image: tkinter.Label = None
 
         self._clearImage()
 
         tkinter.Button(self, text="Generate", command=self.draw).grid(column=0, row=0)
         tkinter.Button(self, text="Clear", command=self._clearImage).grid(column=1, row=0)
         tkinter.Button(self, text="Save", command=self._saveImage).grid(column=2, row=0)
+
+        self.redraw = tkinter.BooleanVar(self, False)
+        tkinter.Checkbutton(self, text="Redraw", variable=self.redraw).grid(column=3, row=0)
+
+        self.inputModifiedTime:float = None
+        self.colorModes:list[tuple[ColorMode, DrawMode]] = []
+
+        self.after(700, self._checkInput)
+
+    def _checkInput(self, inputFile="input.yml") -> None:
+        newModifiedTime = os.path.getmtime(inputFile)
+        fileChanged = self.inputModifiedTime == None or newModifiedTime > self.inputModifiedTime 
+        if fileChanged:
+            self.inputModifiedTime = newModifiedTime
+            self.colorModes = list(InputParser.parse(inputFile))
+
+        existingDelay = 700
+        startTime = datetime.datetime.now()
+        if fileChanged or self.redraw.get():
+            self.draw()
+        existingDelay = existingDelay - int((datetime.datetime.now() - startTime).total_seconds() * 1000)
+        self.after(existingDelay, self._checkInput)
 
     def _clearImage(self):
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
@@ -141,34 +161,33 @@ class DrawUI(tkinter.Tk):
         self.surface.write_to_png(f"generated/{color_mode}_{draw_mode}_{suffix}.png")
 
     def draw(self):
-        (colorMode, drawMode) = InputParser.parse("input.yml")
-
-        if colorMode == None or drawMode == None:
-            return
 
         if self.image:
             self.image.destroy()
 
-        start_time = datetime.datetime.now()
-        drawMode.draw(
-            self.context,
-            colorMode,
-            self.width,
-            self.height,
-        )
-        time_elapsed = datetime.datetime.now() - start_time
-        logging.info("Draw took %f seconds", time_elapsed.total_seconds())
+        for (colorMode, drawMode) in self.colorModes:
+            start_time = datetime.datetime.now()
+            drawMode.draw(
+                self.context,
+                colorMode,
+                self.width,
+                self.height,
+            )
+            time_elapsed = datetime.datetime.now() - start_time
+            logging.info("Draw took %f seconds", time_elapsed.total_seconds())
 
-        start_time = datetime.datetime.now()
-        self._setImage()
-        time_elapsed = datetime.datetime.now() - start_time
-        logging.info("Set took %f seconds", time_elapsed.total_seconds())
+            start_time = datetime.datetime.now()
+            self._setImage()
+            time_elapsed = datetime.datetime.now() - start_time
+            logging.info("Set took %f seconds", time_elapsed.total_seconds())
+
 
 def main():
     arguments = docopt.docopt(__doc__, version='v0.0.0')
     logging.basicConfig(level=logging.DEBUG)
     window = DrawUI()
     window.mainloop()
+
 
 if __name__ == '__main__':
     main()
