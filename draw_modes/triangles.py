@@ -4,7 +4,7 @@ from color_modes import ColorMode
 from draw_modes import DrawMode
 
 class TrianglesDrawMode(DrawMode):
-    def __init__(self, count=50):
+    def __init__(self, count:int=50):
         self.count = count
 
     def draw(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int) -> None:

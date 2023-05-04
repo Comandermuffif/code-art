@@ -5,12 +5,10 @@
     "type": "object",
     "properties": {
         "drawMode": {
-            "type": "object",
-            "description": "The draw mode used to generate the image"
+            "$ref": "#/$defs/drawMode"
         },
         "colorMode": {
-            "$ref": "#/$defs/colorMode",
-            "description": "The color mode used by the draw mode to select colors"
+            "$ref": "#/$defs/colorMode"
         }
     },
     "required": [
@@ -18,18 +16,55 @@
         "colorMode"
     ],
     "$defs": {
+        "drawMode": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/CirclesDrawMode"
+                },
+                {
+                    "$ref": "#/$defs/SquaresDrawMode"
+                },
+                {
+                    "$ref": "#/$defs/TrianglesDrawMode"
+                },
+                {
+                    "$ref": "#/$defs/VoronoiDrawMode"
+                }
+            ]
+        },
         "colorMode": {
             "oneOf": [
-                { "$ref": "#/$defs/rotateColorMode" },
-                { "$ref": "#/$defs/normalColorMode" },
-                { "$ref": "#/$defs/gradientColorMode" },
-                { "$ref": "#/$defs/clampColorMode" }
+                {
+                    "$ref": "#/$defs/GradientColorMode"
+                },
+                {
+                    "$ref": "#/$defs/GridColorMode"
+                },
+                {
+                    "$ref": "#/$defs/LinearGradientColorMode"
+                },
+                {
+                    "$ref": "#/$defs/ClampColorMode"
+                },
+                {
+                    "$ref": "#/$defs/NormalColorMode"
+                },
+                {
+                    "$ref": "#/$defs/RotateColorMode"
+                }
             ]
         },
         "colors": {
             "oneOf": [
-                { "type": "array", "items": { "$ref": "#/$defs/color" } },
-                { "$ref": "#/$defs/getSubcolors" }
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/color"
+                    }
+                },
+                {
+                    "$ref": "#/$defs/getSubcolors"
+                }
             ]
         },
         "color": {
@@ -39,98 +74,228 @@
         },
         "getSubcolors": {
             "type": "object",
-            "title": "Subcolors",
-            "description": "Get a list of colors with a subset of colors between each",
+            "required": [
+                "getSubcolors"
+            ],
             "properties": {
                 "getSubcolors": {
                     "type": "object",
                     "properties": {
-                        "subcount": {
-                            "type": "integer",
-                            "description": "The number of colors to generate betwen input colors"
-                        },
                         "colors": {
-                            "type": "array",
-                            "items": { "$ref": "#/$defs/color" }
-                        }
-                    }
-                }
-            }
-        },
-        "rotateColorMode": {
-            "type": "object",
-            "title": "Rotate Color Mode",
-            "description": "Rotate the image",
-            "required": ["rotate"],
-            "properties": {
-                "rotate": {
-                    "type": "object",
-                    "properties": {
-                        "angleDeg": {
-                            "type": "number",
-                            "description": "The angle to rotate the image by (in degrees)"
+                            "$ref": "#/$defs/colors"
                         },
-                        "child": { "$ref": "#/$defs/colorMode" }
+                        "subcount": {
+                            "type": "number"
+                        }
                     },
-                    "required": ["angleDeg","child"]
+                    "required": [
+                        "colors",
+                        "subcount"
+                    ]
                 }
             }
         },
-        "normalColorMode": {
+        "GradientColorMode": {
             "type": "object",
-            "title": "Normal Dist Color Mode",
-            "description": "Randomize the input by a set divergance",
-            "required": ["normal"],
+            "required": [
+                "GradientColorMode"
+            ],
             "properties": {
-                "normal": {
+                "GradientColorMode": {
                     "type": "object",
                     "properties": {
+                        "colors": {
+                            "$ref": "#/$defs/colors"
+                        }
+                    },
+                    "required": [
+                        "colors"
+                    ]
+                }
+            }
+        },
+        "GridColorMode": {
+            "type": "object",
+            "required": [
+                "GridColorMode"
+            ],
+            "properties": {
+                "GridColorMode": {
+                    "type": "object",
+                    "properties": {
+                        "colors": {
+                            "$ref": "#/$defs/colors"
+                        }
+                    },
+                    "required": [
+                        "colors"
+                    ]
+                }
+            }
+        },
+        "LinearGradientColorMode": {
+            "type": "object",
+            "required": [
+                "LinearGradientColorMode"
+            ],
+            "properties": {
+                "LinearGradientColorMode": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            }
+        },
+        "ClampColorMode": {
+            "type": "object",
+            "required": [
+                "ClampColorMode"
+            ],
+            "properties": {
+                "ClampColorMode": {
+                    "type": "object",
+                    "properties": {
+                        "child": {
+                            "$ref": "#/$defs/colorMode"
+                        }
+                    },
+                    "required": [
+                        "child"
+                    ]
+                }
+            }
+        },
+        "NormalColorMode": {
+            "type": "object",
+            "required": [
+                "NormalColorMode"
+            ],
+            "properties": {
+                "NormalColorMode": {
+                    "type": "object",
+                    "properties": {
+                        "child": {
+                            "$ref": "#/$defs/colorMode"
+                        },
                         "xDivergance": {
-                            "type": "number",
-                            "description": "The angle to rotate the image by (in degrees)",
-                            "default": 0.07
+                            "type": "number"
                         },
                         "yDivergance": {
-                            "type": "number",
-                            "description": "The angle to rotate the image by (in degrees)",
-                            "default": 0.07
-                        },
-                        "child": { "$ref": "#/$defs/colorMode" }
-                    },
-                    "required": ["xDivergance","yDivergance","child"]
-                }
-            }
-        },
-        "gradientColorMode": {
-            "type": "object",
-            "title": "Gradient Color Mode",
-            "description": "Bucketed gradient from left to right",
-            "required": ["gradient"],
-            "properties": {
-                "gradient": {
-                    "type": "object",
-                    "properties": {
-                        "colors": {
-                            "$ref": "#/$defs/colors",
-                            "description": "The colors from left to right"
+                            "type": "number"
                         }
                     },
-                    "required": ["colors"]
+                    "required": [
+                        "child",
+                        "xDivergance",
+                        "yDivergance"
+                    ]
                 }
             }
         },
-        "clampColorMode": {
+        "RotateColorMode": {
             "type": "object",
-            "title": "Clamp Color Mode",
-            "description": "Clamp alpha channels",
-            "required": ["clamp"],
+            "required": [
+                "RotateColorMode"
+            ],
             "properties": {
-                "clamp": {
+                "RotateColorMode": {
                     "type": "object",
                     "properties": {
-                        "child": { "$ref": "#/$defs/colorMode" }
+                        "child": {
+                            "$ref": "#/$defs/colorMode"
+                        },
+                        "angleDeg": {
+                            "type": "number"
+                        }
                     },
-                    "required": ["child"]
+                    "required": [
+                        "child",
+                        "angleDeg"
+                    ]
+                }
+            }
+        },
+        "CirclesDrawMode": {
+            "type": "object",
+            "required": [
+                "CirclesDrawMode"
+            ],
+            "properties": {
+                "CirclesDrawMode": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "type": "number"
+                        },
+                        "minSize": {
+                            "type": "number"
+                        },
+                        "maxSize": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "count",
+                        "minSize",
+                        "maxSize"
+                    ]
+                }
+            }
+        },
+        "SquaresDrawMode": {
+            "type": "object",
+            "required": [
+                "SquaresDrawMode"
+            ],
+            "properties": {
+                "SquaresDrawMode": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "count"
+                    ]
+                }
+            }
+        },
+        "TrianglesDrawMode": {
+            "type": "object",
+            "required": [
+                "TrianglesDrawMode"
+            ],
+            "properties": {
+                "TrianglesDrawMode": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "count"
+                    ]
+                }
+            }
+        },
+        "VoronoiDrawMode": {
+            "type": "object",
+            "required": [
+                "VoronoiDrawMode"
+            ],
+            "properties": {
+                "VoronoiDrawMode": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "count"
+                    ]
                 }
             }
         }
