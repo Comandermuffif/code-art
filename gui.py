@@ -31,6 +31,7 @@ from color_modes.linear_gradient import LinearGradientColorMode
 from color_modes.modify.clamp import ClampColorMode
 from color_modes.modify.normal import NormalColorMode
 from color_modes.modify.rotate import RotateColorMode
+from color_modes.wave_function_collapse import WaveFunctionCollapseColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode

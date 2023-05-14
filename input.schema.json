@@ -51,6 +51,9 @@
                 },
                 {
                     "$ref": "#/$defs/RotateColorMode"
+                },
+                {
+                    "$ref": "#/$defs/WaveFunctionCollapseColorMode"
                 }
             ]
         },
@@ -211,6 +214,33 @@
                     "required": [
                         "child",
                         "angleDeg"
+                    ]
+                }
+            }
+        },
+        "WaveFunctionCollapseColorMode": {
+            "type": "object",
+            "required": [
+                "WaveFunctionCollapseColorMode"
+            ],
+            "properties": {
+                "WaveFunctionCollapseColorMode": {
+                    "type": "object",
+                    "properties": {
+                        "colors": {
+                            "$ref": "#/$defs/colors"
+                        },
+                        "boardWidth": {
+                            "type": "number"
+                        },
+                        "boardHeight": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "colors",
+                        "boardWidth",
+                        "boardHeight"
                     ]
                 }
             }
