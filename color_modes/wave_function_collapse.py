@@ -1,5 +1,7 @@
 from math import floor
-from random import choice
+from random import choice, shuffle, randint
+
+import itertools
 
 from color_modes import ColorMode
 from models import FloatColor
@@ -28,37 +30,35 @@ class WaveBoard():
             for y in range(width):
                 board.possible[x][y] = nodes
 
-        for x in range(width):
-            for y in range(width):
-                # Randomly choose based on what's currently allowed
-                color = choice(board.possible[x][y]).color
-                board.grid[x][y] = color
+        for (x, y) in itertools.product(range(width), range(height)):
+            board.setCell(x, y)
 
-                # Update neighbors
-                for offset in cls.neighborOffsets:
-                    # Skip checking elements off the board
-                    if x + offset[0] > width - 1 or y + offset[1] > width - 1:
-                        continue
-                    if x + offset[0] < 0 or y + offset[1] < 0:
-                        continue
-
-                    # Don't reassign set neighbors
-                    if board.grid[x + offset[0]][y + offset[1]] != None:
-                        continue
-
-                    possibleNeighbors = board.possible[x + offset[0]][y + offset[1]]
-                    possibleNeighbors = [neighbor for neighbor in possibleNeighbors if color in neighbor.validNeighbors]
-                    board.possible[x + offset[0]][y + offset[1]] = possibleNeighbors
         return board
 
+    def setCell(self, x:int, y:int):
+        color = choice(self.possible[x][y]).color
+        self.grid[x][y] = color
+
+        # Update neighbors
+        for offset in self.neighborOffsets:
+            # Skip checking elements off the board
+            if x + offset[0] > self.width - 1 or y + offset[1] > self.width - 1:
+                continue
+            if x + offset[0] < 0 or y + offset[1] < 0:
+                continue
+
+            # Don't reassign set neighbors
+            if self.grid[x + offset[0]][y + offset[1]] != None:
+                continue
+
+            possibleNeighbors = self.possible[x + offset[0]][y + offset[1]]
+            possibleNeighbors = [neighbor for neighbor in possibleNeighbors if color in neighbor.validNeighbors]
+            self.possible[x + offset[0]][y + offset[1]] = possibleNeighbors
+
 class WaveFunctionCollapseColorMode(ColorMode):
-    def __init__(self, colors:list[FloatColor], boardWidth:int, boardHeight:int):
+    def __init__(self, colors:list[FloatColor], boardWidth:int, boardHeight:int, neighbors:list[int]=[-1,0,0,0,1]):
         self.board = WaveBoard.generate(boardWidth, boardHeight, [
-            WaveNode(colors[x], [
-                colors[(x-1) % len(colors)],
-                colors[x],
-                colors[(x+1) % len(colors)]
-            ]) for x in range(len(colors))
+            WaveNode(colors[x], [colors[(x + i) % len(colors)] for i in neighbors]) for x in range(len(colors))
         ])
 
     def getColor(self, x:float, y:float) -> FloatColor:

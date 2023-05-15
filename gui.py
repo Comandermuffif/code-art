@@ -316,6 +316,8 @@ class SchemaGenerator():
                 return {"type": "number"}
             elif input == float:
                 return {"type": "number"}
+            elif input == list[int]:
+                return {"type": "array", "items": "number"}
 
         if input == FloatColor.getSubcolors:
             return { "$ref": "#/$defs/getSubcolors" }
