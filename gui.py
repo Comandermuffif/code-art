@@ -38,6 +38,7 @@ from draw_modes.circles import CirclesDrawMode
 from draw_modes.squares import SquaresDrawMode
 from draw_modes.triangles import TrianglesDrawMode
 from draw_modes.voronoi import VoronoiDrawMode
+from draw_modes.wave_function_collapse import WaveFunctionCollapseDrawMode
 
 from models import FloatColor
 

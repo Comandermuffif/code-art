@@ -29,6 +29,9 @@
                 },
                 {
                     "$ref": "#/$defs/VoronoiDrawMode"
+                },
+                {
+                    "$ref": "#/$defs/WaveFunctionCollapseDrawMode"
                 }
             ]
         },
@@ -325,6 +328,29 @@
                     },
                     "required": [
                         "count"
+                    ]
+                }
+            }
+        },
+        "WaveFunctionCollapseDrawMode": {
+            "type": "object",
+            "required": [
+                "WaveFunctionCollapseDrawMode"
+            ],
+            "properties": {
+                "WaveFunctionCollapseDrawMode": {
+                    "type": "object",
+                    "properties": {
+                        "boardWidth": {
+                            "type": "number"
+                        },
+                        "boardHeight": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "boardWidth",
+                        "boardHeight"
                     ]
                 }
             }
