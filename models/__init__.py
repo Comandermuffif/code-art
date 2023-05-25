@@ -89,6 +89,18 @@ class FloatColor():
         full_colors.append(colors[-1])
         return full_colors
 
+class Colors:
+    red = FloatColor(1, 0, 0)
+    green = FloatColor(0, 1, 0)
+    blue = FloatColor(0, 0, 1)
+
+    white = FloatColor(1, 1, 1)
+    black = FloatColor(0, 0, 0)
+
+    cyan = FloatColor(0, 1, 1)
+    yellow = FloatColor(1, 1, 0)
+    magenta = FloatColor(1, 0, 1)
+
 class Point(object):
     def __init__(self, x:float, y:float):
         self.x = x

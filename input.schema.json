@@ -340,18 +340,8 @@
             "properties": {
                 "WaveFunctionCollapseDrawMode": {
                     "type": "object",
-                    "properties": {
-                        "boardWidth": {
-                            "type": "number"
-                        },
-                        "boardHeight": {
-                            "type": "number"
-                        }
-                    },
-                    "required": [
-                        "boardWidth",
-                        "boardHeight"
-                    ]
+                    "properties": {},
+                    "required": []
                 }
             }
         }
