@@ -50,7 +50,7 @@
                     "$ref": "#/$defs/NormalColorMode"
                 },
                 {
-                    "$ref": "#/$defs/RotateColorMode"
+                    "$ref": "#/$defs/TransformColorMode"
                 }
             ]
         },
@@ -192,17 +192,29 @@
                 }
             }
         },
-        "RotateColorMode": {
+        "TransformColorMode": {
             "type": "object",
             "required": [
-                "RotateColorMode"
+                "TransformColorMode"
             ],
             "properties": {
-                "RotateColorMode": {
+                "TransformColorMode": {
                     "type": "object",
                     "properties": {
                         "child": {
                             "$ref": "#/$defs/colorMode"
+                        },
+                        "xOffset": {
+                            "type": "number"
+                        },
+                        "yOffset": {
+                            "type": "number"
+                        },
+                        "xScale": {
+                            "type": "number"
+                        },
+                        "yScale": {
+                            "type": "number"
                         },
                         "angleDeg": {
                             "type": "number"
@@ -210,6 +222,10 @@
                     },
                     "required": [
                         "child",
+                        "xOffset",
+                        "yOffset",
+                        "xScale",
+                        "yScale",
                         "angleDeg"
                     ]
                 }

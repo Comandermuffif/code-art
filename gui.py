@@ -30,7 +30,7 @@ from color_modes.grid import GridColorMode
 from color_modes.linear_gradient import LinearGradientColorMode
 from color_modes.modify.clamp import ClampColorMode
 from color_modes.modify.normal import NormalColorMode
-from color_modes.modify.rotate import RotateColorMode
+from color_modes.modify.transform import TransformColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
