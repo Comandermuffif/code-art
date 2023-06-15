@@ -1,41 +1,33 @@
-import logging
+import typing
 import shlex
 
 from color_modes import ColorMode
 from draw_modes import DrawMode
 
 class Token():
-        pass
+    pass
 
 class ValueToken(Token):
     def __init__(self, value:str=None):
         self.value = value
 
 class ArrayToken(Token):
-    def __init__(self, items:list[Token] = []):
-        self.items = items
+    def __init__(self):
+        self.items:list[Token] = list()
 
 class FunctionToken(Token):
-    def __init__(self, name:str, args:list[Token] = []):
+    def __init__(self, name:str):
         self.name = name
-        self.args = args
+        self.args:list[Token] = list()
 
 class InputParser():
     @classmethod
-    def parse(cls, inputFilepath:str) -> list[tuple[ColorMode, DrawMode]]:
-        with open(inputFilepath, mode='r') as stream:
-            reader = shlex.shlex(stream)
-
-            while token := reader.get_token():
-                logging.debug(token)
-
-                if token == 'SetColorMode':
-                    colorMode = cls._parseToken(reader)
-                elif token == 'SetDrawMode':
-                    drawMode = cls._parseToken(reader)
-
-        raise NotImplementedError()
-
+    def parse(cls, stream:typing.TextIO) -> list[tuple[ColorMode, DrawMode]]:
+        reader = shlex.shlex(stream, posix=True)
+        tokens = []
+        while token := cls._parseToken(reader):
+            tokens.append(token)
+        return tokens
 
     @classmethod
     def _parseToken(cls, reader:shlex.shlex) -> Token:
@@ -82,6 +74,7 @@ class InputParser():
 
     @classmethod
     def _parseFunction(cls, reader:shlex.shlex) -> FunctionToken:
-        name = reader.get_token()
+        funcToken = FunctionToken(reader.get_token())
         argsArray = cls._parseArray(reader, '(', ')')
-        return FunctionToken(name, argsArray.items)
+        funcToken.args = argsArray.items
+        return funcToken
