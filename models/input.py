@@ -11,18 +11,27 @@ class ValueToken(Token):
     def __init__(self, value:str=None):
         self.value = value
 
+    def __repr__(self) -> str:
+        return self.value
+
 class ArrayToken(Token):
     def __init__(self):
         self.items:list[Token] = list()
+
+    def __repr__(self) -> str:
+        return "[{}]".format(str.join(",", [x.__repr__() for x in self.items]))
 
 class FunctionToken(Token):
     def __init__(self, name:str):
         self.name = name
         self.args:list[Token] = list()
 
+    def __repr__(self) -> str:
+        return "{}({})".format(self.name, str.join(",", [x.__repr__() for x in self.args]))
+
 class InputParser():
     @classmethod
-    def parse(cls, stream:typing.TextIO) -> list[tuple[ColorMode, DrawMode]]:
+    def parse(cls, stream:typing.TextIO) -> list[Token]:
         reader = shlex.shlex(stream, posix=True)
         tokens = []
         while token := cls._parseToken(reader):
@@ -33,11 +42,13 @@ class InputParser():
     def _parseToken(cls, reader:shlex.shlex) -> Token:
         value = reader.get_token()
 
+        if value == reader.eof:
+            return None
+
         # If we have seen the start of an array
         if value == '[':
             reader.push_token(value)
             return cls._parseArray(reader)
-
 
         # Peek at the next token
         nextValue = reader.get_token()
