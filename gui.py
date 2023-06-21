@@ -75,9 +75,17 @@ class Renderer():
         if isinstance(token, ValueToken):
             if token.value.startswith("#"):
                 return FloatColor.fromHex(token.value)
-            
-            if token.value.isdigit():
+
+            try:
                 return int(token.value)
+            except:
+                pass
+
+            try:
+                return float(token.value)
+            except:
+                pass
+
             return token.value
 
         raise NotImplementedError()
