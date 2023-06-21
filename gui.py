@@ -69,6 +69,8 @@ class Renderer():
             if token.name in cls.knownFunctions:
                 return cls.knownFunctions[token.name](*[cls._flatten(x) for x in token.args])
 
+            raise ValueError(f"Unknown function {token.name}")
+
         if isinstance(token, ArrayToken):
             return list([cls._flatten(x) for x in token.items])
 
