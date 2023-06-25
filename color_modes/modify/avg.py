@@ -2,10 +2,6 @@ from color_modes import ColorMode
 from models import FloatColor
 
 class AvgColorMode(ColorMode):
-    @classmethod
-    def get_name(self) -> str:
-        return "Avg"
-
     def __init__(self, a:ColorMode, b:ColorMode):
         if (a == None):
             raise ValueError("Color mode A unset")

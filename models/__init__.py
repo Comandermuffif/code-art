@@ -136,6 +136,9 @@ class Point(object):
         else:
             return Point(self.x * other, self.y * other)
 
+    def __truediv__(self, other:Point) -> Point:
+        return self.__div__(other)
+
     def __div__(self, other:Point) -> Point:
         return Point(
             self.x / other.x,
