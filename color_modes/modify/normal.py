@@ -5,10 +5,6 @@ from color_modes import ColorMode
 from models import FloatColor
 
 class NormalColorMode(ColorMode):
-    @classmethod
-    def get_name(self) -> str:
-        return "Normal"
-
     def __init__(self, child:ColorMode, xDivergance:float=0.1, yDivergance:float=0.1):
         if (child == None):
             raise ValueError("Child color mode unset")
