@@ -54,5 +54,5 @@ class VoronoiDrawMode(DrawMode):
             point = region_points[region_index]
             color = color_mode.getColor(point[0], point[1])
             context.set_source_rgba(*color.toTuple())
-            context.stroke_preserve()
+            # context.stroke_preserve()
             context.fill()

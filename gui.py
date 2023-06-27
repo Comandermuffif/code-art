@@ -12,6 +12,7 @@ from __future__ import annotations
 import datetime
 import itertools
 import logging
+import os
 
 import cairo
 import docopt
@@ -23,6 +24,7 @@ from color_modes import ColorMode
 from color_modes.gradient import GradientColorMode
 from color_modes.grid import GridColorMode
 from color_modes.linear_gradient import LinearGradientColorMode
+from color_modes.random import RandomColorMode
 from color_modes.modify.clamp import ClampColorMode
 from color_modes.modify.normal import NormalColorMode
 from color_modes.modify.transform import TransformColorMode
@@ -39,7 +41,7 @@ from models import FloatColor
 from models.input import InputParser, Token, FunctionToken, ArrayToken, ValueToken
 
 class Renderer():
-    knownFunctions = { x.__name__: x for x in itertools.chain(DrawMode.__subclasses__(), ColorMode.__subclasses__(), [FloatColor.getSubcolors])}
+    knownFunctions = { x.__name__: x for x in itertools.chain(DrawMode.__subclasses__(), ColorMode.__subclasses__(), [FloatColor.getSubcolors, random.seed])}
 
     @classmethod
     def render(cls, tokens:list[Token], context:cairo.Context, width:int, height:int) -> None:
@@ -61,7 +63,7 @@ class Renderer():
             elif token.name == "Draw":
                 drawMode.draw(context, colorMode, width, height)
             else:
-                raise ValueError(f"Unexpected function name {token.name}")
+                cls._flatten(token)
 
     @classmethod
     def _flatten(cls, token:Token):
@@ -88,6 +90,9 @@ class Renderer():
             except:
                 pass
 
+            if token.value == "None":
+                return None
+
             return token.value
 
         raise NotImplementedError()
@@ -97,6 +102,7 @@ class DrawUI(tkinter.Tk):
         super().__init__(*args, **kwargs)
         self.width, self.height = 1024, 1024
 
+        self.inputFile = "input.conf"
         self.geometry("{}x{}".format(self.width + 50, self.height + 50))
 
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
@@ -111,6 +117,21 @@ class DrawUI(tkinter.Tk):
 
         self.redraw = tkinter.BooleanVar(self, False)
         tkinter.Checkbutton(self, text="Redraw", variable=self.redraw).grid(column=3, row=0)
+
+        self.inputModifiedTime:float = None
+        self.after(700, self._checkInput)
+
+    def _checkInput(self) -> None:
+        newModifiedTime = os.path.getmtime(self.inputFile)
+        fileChanged = self.inputModifiedTime == None or newModifiedTime > self.inputModifiedTime
+        self.inputModifiedTime = newModifiedTime
+
+        existingDelay = 700
+        startTime = datetime.datetime.now()
+        if fileChanged or self.redraw.get():
+            self.draw()
+        existingDelay = existingDelay - int((datetime.datetime.now() - startTime).total_seconds() * 1000)
+        self.after(existingDelay, self._checkInput)
 
     def _clearImage(self):
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
@@ -129,21 +150,24 @@ class DrawUI(tkinter.Tk):
         self.surface.write_to_png(f"generated/{color_mode}_{draw_mode}_{suffix}.png")
 
     def draw(self):
-        if self.image:
-            self.image.destroy()
+        try:
+            if self.image:
+                self.image.destroy()
 
-        with open("input.conf", mode='r') as stream:
-            tokens = InputParser.parse(stream)
+            with open(self.inputFile, mode='r') as stream:
+                tokens = InputParser.parse(stream)
 
-        start_time = datetime.datetime.now()
-        Renderer.render(tokens, self.context, self.width, self.height)
-        time_elapsed = datetime.datetime.now() - start_time
-        logging.info("Draw took %f seconds", time_elapsed.total_seconds())
+            start_time = datetime.datetime.now()
+            Renderer.render(tokens, self.context, self.width, self.height)
+            time_elapsed = datetime.datetime.now() - start_time
+            logging.info("Draw took %f seconds", time_elapsed.total_seconds())
 
-        start_time = datetime.datetime.now()
-        self._setImage()
-        time_elapsed = datetime.datetime.now() - start_time
-        logging.info("Set took %f seconds", time_elapsed.total_seconds())
+            start_time = datetime.datetime.now()
+            self._setImage()
+            time_elapsed = datetime.datetime.now() - start_time
+            logging.info("Set took %f seconds", time_elapsed.total_seconds())
+        except Exception as ex:
+            logging.exception(ex)
 
 def main():
     arguments = docopt.docopt(__doc__, version='v0.0.0')
