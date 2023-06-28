@@ -38,68 +38,7 @@ from draw_modes.voronoi import VoronoiDrawMode
 from PIL import Image, ImageTk
 from models import FloatColor
 
-from models.input import InputParser, Token, FunctionToken, ArrayToken, ValueToken
-
-class Renderer():
-    knownFunctions = { x.__name__: x for x in itertools.chain(DrawMode.__subclasses__(), ColorMode.__subclasses__(), [FloatColor.getSubcolors, random.seed])}
-
-    @classmethod
-    def render(cls, tokens:list[Token], context:cairo.Context, width:int, height:int) -> None:
-        colorMode:ColorMode = None
-        drawMode:DrawMode = None
-
-        for token in tokens:
-            if not isinstance(token, FunctionToken):
-                raise ValueError("Expected function token at root")
-
-            if token.name == "SetDrawMode":
-                if len(token.args) != 1:
-                    raise ValueError("Unexpected number of arguments")
-                drawMode = cls._flatten(token.args[0])
-            elif token.name == "SetColorMode":
-                if len(token.args) != 1:
-                    raise ValueError("Unexpected number of arguments")
-                colorMode = cls._flatten(token.args[0])
-            elif token.name == "Draw":
-                drawMode.draw(context, colorMode, width, height)
-            else:
-                cls._flatten(token)
-
-    @classmethod
-    def _flatten(cls, token:Token):
-        if isinstance(token, FunctionToken):
-            if token.name in cls.knownFunctions:
-                return cls.knownFunctions[token.name](*[cls._flatten(x) for x in token.args])
-
-            raise ValueError(f"Unknown function {token.name}")
-
-        if isinstance(token, ArrayToken):
-            return list([cls._flatten(x) for x in token.items])
-
-        if isinstance(token, ValueToken):
-            if token.value.startswith("#"):
-                return FloatColor.fromHex(token.value)
-
-            try:
-                return int(token.value)
-            except:
-                pass
-
-            try:
-                return float(token.value)
-            except:
-                pass
-
-            if token.value == "$None":
-                return None
-            elif token.value == "$true":
-                return True
-            elif token.value == "$false":
-                return False
-
-            return token.value
-
-        raise NotImplementedError()
+from models.input import InputParser, InputEvaluator
 
 class DrawUI(tkinter.Tk):
     def __init__(self, *args, **kwargs):
@@ -121,6 +60,43 @@ class DrawUI(tkinter.Tk):
 
         self.redraw = tkinter.BooleanVar(self, False)
         tkinter.Checkbutton(self, text="Redraw", variable=self.redraw).grid(column=3, row=0)
+
+        self.drawMode:DrawMode = None
+        def SetDrawMode(drawMode:DrawMode):
+            self.drawMode = drawMode
+
+        self.colorMode:ColorMode = None
+        def SetColorMode(colorMode:ColorMode):
+            self.colorMode = colorMode
+
+        def Draw():
+            if not self.colorMode:
+                logging.error("Color mode unset, unable to draw")
+                return
+
+            if not self.drawMode:
+                logging.error("Draw mode unset, unable to draw")
+                return
+
+            self.drawMode.draw(self.context, self.colorMode, self.width, self.height)
+
+        def parseTypes(input:str):
+            if input.startswith("#") and (len(input) == 7 or len(input) == 9):
+                return FloatColor.fromHex(input)
+
+        self.parser = InputEvaluator(
+            itertools.chain(
+                DrawMode.__subclasses__(),
+                ColorMode.__subclasses__(),
+                [
+                    SetDrawMode,
+                    SetColorMode,
+                    Draw,
+                    FloatColor.getSubcolors,
+                ]
+            ),
+            parseTypes
+        )
 
         self.inputModifiedTime:float = None
         self.after(700, self._checkInput)
@@ -162,7 +138,7 @@ class DrawUI(tkinter.Tk):
                 tokens = InputParser.parse(stream)
 
             start_time = datetime.datetime.now()
-            Renderer.render(tokens, self.context, self.width, self.height)
+            self.parser.parse(tokens)
             time_elapsed = datetime.datetime.now() - start_time
             logging.info("Draw took %f seconds", time_elapsed.total_seconds())
 
