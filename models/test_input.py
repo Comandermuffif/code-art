@@ -3,10 +3,10 @@ from io import StringIO
 import shlex
 import unittest
 
-from models.input import InputParser, FunctionToken, ArrayToken, ValueToken
+from models.input import InputEvaluator, InputParser, FunctionToken, ArrayToken, ValueToken
 
 
-class ParsingUnitTests(unittest.TestCase):
+class InputParserUnitTests(unittest.TestCase):
     def test_value(self):
         reader = shlex.shlex("item1")
         valueToken = InputParser._parseToken(reader)
@@ -104,3 +104,55 @@ Draw()""")
             self.fail("Expected function token")
 
         self.assertEqual("5000", tokens[1].args[0].args[0].value)
+
+
+class InputEvaluatorUnitTests(unittest.TestCase):
+    def test_add(self):
+        stream = StringIO("test(add(1, 2))")
+        tokens = InputParser.parse(stream)
+
+        def test(input):
+            self.assertEqual(3, input)
+
+        evaluator = InputEvaluator([test])
+        evaluator.parse(tokens)
+
+    def test_sub(self):
+        stream = StringIO("test(sub(1, 2))")
+        tokens = InputParser.parse(stream)
+
+        def test(input):
+            self.assertEqual(-1, input)
+
+        evaluator = InputEvaluator([test])
+        evaluator.parse(tokens)
+
+    def test_mult(self):
+        stream = StringIO("test(mult(3, 2))")
+        tokens = InputParser.parse(stream)
+
+        def test(input):
+            self.assertEqual(6, input)
+
+        evaluator = InputEvaluator([test])
+        evaluator.parse(tokens)
+
+    def test_div(self):
+        stream = StringIO("test(div(1, 2))")
+        tokens = InputParser.parse(stream)
+
+        def test(input):
+            self.assertEqual(0.5, input)
+
+        evaluator = InputEvaluator([test])
+        evaluator.parse(tokens)
+
+    def test_sum(self):
+        stream = StringIO("test(sum([1, 2]))")
+        tokens = InputParser.parse(stream)
+
+        def test(input):
+            self.assertEqual(3, input)
+
+        evaluator = InputEvaluator([test])
+        evaluator.parse(tokens)

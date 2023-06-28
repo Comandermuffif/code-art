@@ -1,3 +1,6 @@
+import itertools
+import math
+import random
 import typing
 import shlex
 
@@ -87,10 +90,52 @@ class InputParser():
         funcToken.args = argsArray.items
         return funcToken
 
+class Incrementer():
+    index = 0
+
+    @classmethod
+    def incremental(cls, values:list[typing.Any]) -> typing.Any:
+        return values[cls.index % len(values)]
+
+    @classmethod
+    def incrementIndex(cls):
+        cls.index += 1
+
+def add(a, b):
+    return a + b
+
+def sub(a, b):
+    return a - b
+
+def mult(a, b):
+    return a * b
+
+def div(a, b):
+    return a / b
 
 class InputEvaluator():
-    def __init__(self, knownFunctions:dict, valueParser:typing.Callable[[str], typing.Any]=None) -> None:
-        self.knownFunctions = knownFunctions
+    commonFunctuons = [
+        add,
+        sub,
+        mult,
+        div,
+        sum,
+        Incrementer.incremental,
+        Incrementer.incrementIndex,
+        math.pow,
+        math.fsum,
+        math.floor,
+        math.ceil,
+        random.random,
+        random.seed,
+        random.choice,
+    ]
+
+    def __init__(self, knownFunctions:list[typing.Callable], valueParser:typing.Callable[[str], typing.Any]=None) -> None:
+        self.knownFunctions = {
+            x.__name__: x
+            for x in itertools.chain(self.commonFunctuons, knownFunctions)
+        }
         self.valueParser = valueParser
 
     def parse(self, tokens:list[Token]) -> None:

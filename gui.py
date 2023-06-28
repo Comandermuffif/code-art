@@ -85,21 +85,16 @@ class DrawUI(tkinter.Tk):
                 return FloatColor.fromHex(input)
 
         self.parser = InputEvaluator(
-            {
-                x.__name__: x
-                for x in
-                itertools.chain(
-                    DrawMode.__subclasses__(),
-                    ColorMode.__subclasses__(),
-                    [
-                        SetDrawMode,
-                        SetColorMode,
-                        Draw,
-                        FloatColor.getSubcolors,
-                        random.seed
-                    ]
-                )
-            },
+            itertools.chain(
+                DrawMode.__subclasses__(),
+                ColorMode.__subclasses__(),
+                [
+                    SetDrawMode,
+                    SetColorMode,
+                    Draw,
+                    FloatColor.getSubcolors,
+                ]
+            ),
             parseTypes
         )
 
