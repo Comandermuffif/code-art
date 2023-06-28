@@ -86,3 +86,50 @@ class InputParser():
         argsArray = cls._parseArray(reader, '(', ')')
         funcToken.args = argsArray.items
         return funcToken
+
+
+class InputEvaluator():
+    def __init__(self, knownFunctions:dict, valueParser:typing.Callable[[str], typing.Any]=None) -> None:
+        self.knownFunctions = knownFunctions
+        self.valueParser = valueParser
+
+    def parse(self, tokens:list[Token]) -> None:
+        for token in tokens:
+            self._flatten(token)
+
+    def _flatten(self, token:Token):
+        if isinstance(token, FunctionToken):
+            if token.name in self.knownFunctions:
+                return self.knownFunctions[token.name](*[self._flatten(x) for x in token.args])
+
+            raise ValueError(f"Unknown function {token.name}")
+
+        if isinstance(token, ArrayToken):
+            return list([self._flatten(x) for x in token.items])
+
+        if isinstance(token, ValueToken):
+            if token.value == "$None":
+                return None
+            elif token.value == "$true":
+                return True
+            elif token.value == "$false":
+                return False
+
+            if self.valueParser:
+                parsedValue = self.valueParser(token.value)
+                if parsedValue:
+                    return parsedValue
+
+            try:
+                return int(token.value)
+            except:
+                pass
+
+            try:
+                return float(token.value)
+            except:
+                pass
+
+            return token.value
+
+        raise NotImplementedError()
