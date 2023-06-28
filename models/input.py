@@ -1,9 +1,6 @@
 import typing
 import shlex
 
-from color_modes import ColorMode
-from draw_modes import DrawMode
-
 class Token():
     pass
 

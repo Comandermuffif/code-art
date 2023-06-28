@@ -90,8 +90,12 @@ class Renderer():
             except:
                 pass
 
-            if token.value == "None":
+            if token.value == "$None":
                 return None
+            elif token.value == "$true":
+                return True
+            elif token.value == "$false":
+                return False
 
             return token.value
 
