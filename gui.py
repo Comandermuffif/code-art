@@ -24,6 +24,7 @@ from color_modes import ColorMode
 from color_modes.gradient import GradientColorMode
 from color_modes.grid import GridColorMode
 from color_modes.linear_gradient import LinearGradientColorMode
+from color_modes.polygon import PolygonColorMode
 from color_modes.random import RandomColorMode
 from color_modes.modify.clamp import ClampColorMode
 from color_modes.modify.normal import NormalColorMode
