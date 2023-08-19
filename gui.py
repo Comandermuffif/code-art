@@ -29,6 +29,7 @@ from color_modes.random import RandomColorMode
 from color_modes.modify.clamp import ClampColorMode
 from color_modes.modify.normal import NormalColorMode
 from color_modes.modify.transform import TransformColorMode
+from color_modes.arc import ArcColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
