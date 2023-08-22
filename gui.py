@@ -53,6 +53,8 @@ class DrawUI(tkinter.Tk):
         self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
         self.context = cairo.Context(self.surface)
         self.image: tkinter.Label = None
+        self.imagePrefix = ''.join(random.choice(string.ascii_lowercase+string.digits) for _ in range(8))
+        self.imageCount = 0
 
         self._clearImage()
 
@@ -95,6 +97,7 @@ class DrawUI(tkinter.Tk):
                     SetColorMode,
                     Draw,
                     FloatColor.getSubcolors,
+                    self._saveImage,
                 ]
             ),
             parseTypes
@@ -126,10 +129,8 @@ class DrawUI(tkinter.Tk):
         self.image.grid(column=0, row=2, columnspan=10, rowspan=9)
 
     def _saveImage(self):
-        color_mode = ""
-        draw_mode = ""
-        suffix = ''.join(random.choice(string.ascii_lowercase+string.digits) for _ in range(8))
-        self.surface.write_to_png(f"generated/{color_mode}_{draw_mode}_{suffix}.png")
+        self.surface.write_to_png(f"generated/{self.imagePrefix}_{self.imageCount}.png")
+        self.imageCount += 1
 
     def draw(self):
         try:

@@ -101,6 +101,10 @@ class Incrementer():
     def incrementIndex(cls):
         cls.index += 1
 
+    @classmethod
+    def getIncrementIndex(cls):
+        return cls.index
+
 def add(a, b):
     return a + b
 
@@ -113,6 +117,23 @@ def mult(a, b):
 def div(a, b):
     return a / b
 
+def subset(array, start:int=None, end:int=None):
+    if start == None and end==None:
+        return array
+    elif start == None and end != None:
+        return array[:end]
+    elif start != None and end == None:
+        return array[:end]
+    else:
+        return array[start:end]
+
+def rotate(array, offset:int):
+    offset = offset % len(array)
+    if offset == 0:
+        return array
+    end = offset - len(array)
+    return array[offset:] + array[:end]
+
 class InputEvaluator():
     commonFunctuons = [
         add,
@@ -122,6 +143,7 @@ class InputEvaluator():
         sum,
         Incrementer.incremental,
         Incrementer.incrementIndex,
+        Incrementer.getIncrementIndex,
         math.pow,
         math.fsum,
         math.floor,
@@ -129,6 +151,8 @@ class InputEvaluator():
         random.random,
         random.seed,
         random.choice,
+        subset,
+        rotate,
     ]
 
     def __init__(self, knownFunctions:list[typing.Callable], valueParser:typing.Callable[[str], typing.Any]=None) -> None:
