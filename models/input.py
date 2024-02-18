@@ -134,6 +134,11 @@ def rotate(array, offset:int):
     end = offset - len(array)
     return array[offset:] + array[:end]
 
+def reverse(array:list):
+    reversed = list(array)
+    reversed.reverse()
+    return reversed
+
 class InputEvaluator():
     commonFunctuons = [
         add,
@@ -153,6 +158,7 @@ class InputEvaluator():
         random.choice,
         subset,
         rotate,
+        reverse,
     ]
 
     def __init__(self, knownFunctions:list[typing.Callable], valueParser:typing.Callable[[str], typing.Any]=None) -> None:
