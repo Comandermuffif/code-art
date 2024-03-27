@@ -29,7 +29,9 @@ from color_modes.random import RandomColorMode
 from color_modes.modify.clamp import ClampColorMode
 from color_modes.modify.normal import NormalColorMode
 from color_modes.modify.transform import TransformColorMode
+from color_modes.modify.avg import AvgColorMode
 from color_modes.arc import ArcColorMode
+from color_modes.modify.globe import GlobeColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
@@ -145,10 +147,7 @@ class DrawUI(tkinter.Tk):
             time_elapsed = datetime.datetime.now() - start_time
             logging.info("Draw took %f seconds", time_elapsed.total_seconds())
 
-            start_time = datetime.datetime.now()
             self._setImage()
-            time_elapsed = datetime.datetime.now() - start_time
-            logging.info("Set took %f seconds", time_elapsed.total_seconds())
         except Exception as ex:
             logging.exception(ex)
 

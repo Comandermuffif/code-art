@@ -139,6 +139,11 @@ def reverse(array:list):
     reversed.reverse()
     return reversed
 
+def shuffle(array:list):
+    shuffled = list(array)
+    random.shuffle(shuffled)
+    return shuffled
+
 class InputEvaluator():
     commonFunctuons = [
         add,
@@ -156,9 +161,11 @@ class InputEvaluator():
         random.random,
         random.seed,
         random.choice,
+        random.randint,
         subset,
         rotate,
         reverse,
+        shuffle,
     ]
 
     def __init__(self, knownFunctions:list[typing.Callable], valueParser:typing.Callable[[str], typing.Any]=None) -> None:
