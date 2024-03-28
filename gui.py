@@ -32,6 +32,7 @@ from color_modes.modify.transform import TransformColorMode
 from color_modes.modify.avg import AvgColorMode
 from color_modes.arc import ArcColorMode
 from color_modes.modify.globe import GlobeColorMode
+from color_modes.modify.voronoi import VoronoiColorMode
 
 from draw_modes import DrawMode
 from draw_modes.circles import CirclesDrawMode
