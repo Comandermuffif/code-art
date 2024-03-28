@@ -1,6 +1,5 @@
 import math
 
-
 class Node[T]:
     def __init__(self, value:T) -> None:
         self.left:Node[T] = None
@@ -25,6 +24,24 @@ class Tree[T]:
         
         self.root = Tree._compile(self.values)
         self._compiled = True
+
+    def search(self, input:T) -> T:
+        if not self._compiled:
+            self.compile()
+        return Tree._search(input, self.root)
+
+    @staticmethod
+    def _search(input:T, node:Node[T]) -> T:
+        if node == None:
+            raise ValueError("Search found a non-existant node")
+        
+        if (node.left == None) and (node.right == None):
+            return node.value
+        else:
+            if input < node.value:
+                return Tree._search(input, node.left)
+            else:
+                return Tree._search(input, node.left)
 
     @staticmethod
     def _compile(possibleValues:list[T]) -> Node[T]:
@@ -75,3 +92,5 @@ if __name__ == "__main__":
 
     tree.compile()
     tree.prettyPrint()
+
+    print("Search 3: {}".format(tree.search(3)))
