@@ -1,69 +1,78 @@
 import math
 
-class Node[T]:
-    def __init__(self, value:T) -> None:
-        self.left:Node[T] = None
-        self.right:Node[T] = None
-        self.value:T = value
+class Node[K,V]:
+    def __init__(self, key:K, value:V) -> None:
+        self.left:Node[K,V] = None
+        self.right:Node[K,V] = None
+        self.key:K = key
+        self.value:V = value
 
-class Tree[T]:
+class Tree[K,V]:
     def __init__(self):
-        self.values = set[T]()
+        self.entries = dict[K,V]()
         self._compiled = False
 
-        self.root:Node[T] = None
+        self.root:Node[K,V] = None
 
-    def addValue(self, value:T):
+    def addEntry(self, key:K, value:V):
         if self._compiled:
             raise SyntaxError("Tree is already compiled")
-        self.values.add(value)
+        self.entries[key] = value
 
     def compile(self):
         if self._compiled:
             raise SyntaxError("Tree is already compiled")
         
-        self.root = Tree._compile(self.values)
+        self.root = Tree._compile(self.entries)
         self._compiled = True
 
-    def search(self, input:T) -> T:
+    def search(self, key:K) -> V:
         if not self._compiled:
             self.compile()
-        return Tree._search(input, self.root)
+        return Tree._search(key, self.root)
 
     @staticmethod
-    def _search(input:T, node:Node[T]) -> T:
+    def _search(key:K, node:Node[K,V]) -> V:
         if node == None:
             raise ValueError("Search found a non-existant node")
         
         if (node.left == None) and (node.right == None):
             return node.value
         else:
-            if input < node.value:
-                return Tree._search(input, node.left)
+            if key < node.key:
+                return Tree._search(key, node.left)
             else:
-                return Tree._search(input, node.left)
+                return Tree._search(key, node.left)
 
     @staticmethod
-    def _compile(possibleValues:list[T]) -> Node[T]:
-        if len(possibleValues) == 0:
+    def _compile(entries:dict[K,V]) -> Node[K,V]:
+        if len(entries) == 0:
             return None
-        elif len(possibleValues) == 1:
-            return Node(possibleValues[0])
+        elif len(entries) == 1:
+            item = entries.popitem()
+            return Node(item[0], item[1])
         else:
-            sortedValues = sorted(possibleValues)
+            sortedKeys = sorted(entries.keys())
 
-            if len(possibleValues) == 2:
-                node = Node((possibleValues[0] + possibleValues[1]) / 2)
-                node.left = Node(possibleValues[0])
-                node.right = Node(possibleValues[1])
+            if len(entries) == 2:
+                a = entries.popitem()
+                b = entries.popitem()
 
+                node = Node((a[0] + b[0]) / 2, None)
+
+                if a[0] < b[0]:
+                    node.left = Node(*a)
+                    node.right = Node(*b)
+                else:
+                    node.left = Node(*b)
+                    node.right = Node(*a)
                 return node
             else:
-                medianValue = sortedValues[math.floor(len(possibleValues) / 2) ]
+                medianKey = sortedKeys[math.floor(len(entries) / 2) ]
 
-                node = Node(medianValue)
-                node.left = Tree._compile(list([v for v in possibleValues if v < medianValue]))
-                node.right = Tree._compile(list([v for v in possibleValues if v >= medianValue]))
+                node = Node(medianKey, None)
+                node.left = Tree._compile(dict({k: v for k,v in entries.items() if k < medianKey }))
+                node.right = Tree._compile(dict({k: v for k,v in entries.items() if k >= medianKey }))
 
                 return node
 
@@ -71,7 +80,7 @@ class Tree[T]:
         Tree._prettyPrint(self.root)
 
     @staticmethod
-    def _prettyPrint(root:Node[T]=None, depth=0):
+    def _prettyPrint(root:Node[K,V]=None, depth=0):
         if not root:
             return
         prefix = "".join(["|" for _ in range(depth)])
@@ -79,16 +88,16 @@ class Tree[T]:
         if root.left == None and root.right == None:
             print("{}{}".format(prefix, root.value))
         else:
-            print("{}if X < {}:".format(prefix, root.value))
+            print("{}if X < {}:".format(prefix, root.key))
             Tree._prettyPrint(root.left, depth+1)
-            print("{}if X >= {}:".format(prefix, root.value))
+            print("{}if X >= {}:".format(prefix, root.key))
             Tree._prettyPrint(root.right, depth+1)
 
 if __name__ == "__main__":
-    tree = Tree[int]()
-    tree.addValue(5)
-    tree.addValue(10)
-    tree.addValue(15)
+    tree = Tree[int, str]()
+    tree.addEntry(5, "five")
+    tree.addEntry(10, "ten")
+    tree.addEntry(15, "fifteen")
 
     tree.compile()
     tree.prettyPrint()
