@@ -1,2 +1,4 @@
 docopt
 pycairo
+scipy
+pillow

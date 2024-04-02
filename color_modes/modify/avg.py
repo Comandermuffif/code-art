@@ -1,8 +1,6 @@
 from color_modes import ColorMode
 from models import FloatColor
 
-import math
-
 class AvgColorMode(ColorMode):
     def __init__(self, *colorModes:ColorMode):
 
