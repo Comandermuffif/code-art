@@ -1,6 +1,4 @@
-docopt==0.6.2
-jsonschema==4.6.0
-Pillow==9.5.0
-pycairo==1.23.0
-PyYAML==6.0
-scipy==1.10.1
+docopt
+pycairo
+scipy
+pillow

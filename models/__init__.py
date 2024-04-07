@@ -17,6 +17,9 @@ class FloatColor():
     def toTuple(self) -> tuple[float, float, float, float]:
         return (self.r, self.g, self.b, self.a)
 
+    def inverted(self):
+        return FloatColor(1 - self.r, 1 - self.g, 1 - self.b)
+
     def __repr__(self) -> str:
         return self.toHex()
 
@@ -72,21 +75,34 @@ class FloatColor():
         ]
 
     @classmethod
-    def getSubcolors(cls, colors:list[FloatColor], subcount:int) -> list[FloatColor]:
+    def getSubcolors(cls, colors:list[FloatColor], subcount:int, wrap=False) -> list[FloatColor]:
         full_colors = list()
 
-        for i in range(len(colors) - 1):
-            current_color = colors[i]
+        # The steps between 0 and 1
+        substeps = list([
+            (s + 1)/(subcount + 1)
+            for s in range(subcount)
+        ])
+
+        # For every color
+        for i, current_color in enumerate(colors):
+            # Add the current color
             full_colors.append(current_color)
 
-            next_color = colors[i + 1]
+            # Get the next color
+            next_color = colors[(i + 1) % len(colors)]
 
+            # Get the difference between the two colors
             color_delta = next_color - current_color
 
-            for j in range(subcount):
-                full_colors.append(current_color + (color_delta * ((j + 1) / (subcount + 1))))
+            # If this is the last color, and we're not wrapping
+            if i == len(colors) - 1 and not wrap:
+                # Stop
+                continue
 
-        full_colors.append(colors[-1])
+            # For every substep
+            for substep in substeps:
+                full_colors.append(current_color + (color_delta * substep))
         return full_colors
 
 class Point(object):
@@ -135,6 +151,9 @@ class Point(object):
             )
         else:
             return Point(self.x * other, self.y * other)
+
+    def __truediv__(self, other:Point) -> Point:
+        return self.__div__(other)
 
     def __div__(self, other:Point) -> Point:
         return Point(

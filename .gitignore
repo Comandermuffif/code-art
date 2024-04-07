@@ -1,4 +1,5 @@
 .vscode
 generated
 __pycache__
-input*.yml
+input*
+test_generate_input.py
