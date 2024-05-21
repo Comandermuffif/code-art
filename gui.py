@@ -40,6 +40,7 @@ from draw_modes.squares import SquaresDrawMode
 from draw_modes.triangles import TrianglesDrawMode
 from draw_modes.voronoi import VoronoiDrawMode
 from draw_modes.pattern import PatternDrawMode
+from draw_modes.hexagon import HexagonDrawMode
 
 from PIL import Image, ImageTk
 from models import FloatColor
