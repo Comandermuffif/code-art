@@ -7,25 +7,19 @@ from draw_modes import DrawMode
 from models import Point
 
 class HexagonDrawMode(DrawMode):
-    def __init__(self, count:int=50, radious=0.45):
+    def __init__(self, count:int=50, radious=0.8):
         self.origin = Point(0.5, 0.5)
         self.count = count
 
         sides = 6
         self.localPoints = [
             Point(
-                math.cos(math.radians(360 * (i / sides))) * radious,
-                math.sin(math.radians(360 * (i / sides))) * radious
-            ) + Point(0.5, 0.5)
+                math.cos(math.radians(360 * (i / sides))) * radious * 0.58,
+                math.sin(math.radians(360 * (i / sides))) * radious * 0.58
+            )
             for i in range(sides)
         ]
 
-    def _getHexPoints(self, offset:Point) -> list[Point]:
-        return list([
-            p + self._translate(offset)
-            for p in self.localPoints
-        ])
-    
     @staticmethod
     def _translate(offset:Point) -> Point:
         return Point(
@@ -43,10 +37,9 @@ class HexagonDrawMode(DrawMode):
         if hexCenter.y < -scale.y or hexCenter.y > height + scale.y:
             return
 
-        # Convert shape points into pixel coordinates
         translatedPoints = list([
-            origin + (p * scale)
-            for p in self._getHexPoints(offset)
+            origin + (localPoint + self._translate(offset)) * scale
+            for localPoint in self.localPoints
         ])
 
         # Start at the first point
