@@ -14,6 +14,6 @@ class NormalColorMode(ColorMode):
 
     def getColor(self, x:float, y:float) -> FloatColor:
         return self.child.getColor(
-            max(0, min(1, x + random.normalvariate(0, self.xDivergance))),
-            max(0, min(1, y + random.normalvariate(0, self.yDivergance)))
+            x + random.normalvariate(0, self.xDivergance),
+            y + random.normalvariate(0, self.yDivergance)
         )
