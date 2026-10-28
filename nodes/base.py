@@ -47,7 +47,7 @@ class NodeDef:
 
 
 # Menu ordering for node categories (unknown categories sort last).
-CATEGORY_ORDER: list[str] = ["Color", "Color Modifier", "Draw"]
+CATEGORY_ORDER: list[str] = ["Color", "Color Modifier", "Draw", "Output"]
 
 
 # --- Code generation ---------------------------------------------------------
@@ -58,6 +58,19 @@ def _gui_code(node_def: NodeDef) -> str:
         name = w.param
         if w.kind == "text":
             lines.append(f"widgets[{name!r}] = QtWidgets.QLineEdit({w.default!r})")
+        elif w.kind == "file":
+            lines.append(f"widgets[{name!r}] = QtWidgets.QLineEdit({w.default!r})")
+            lines.append(f"_row_{name} = QtWidgets.QHBoxLayout()")
+            lines.append(f"_browse_btn_{name} = QtWidgets.QPushButton('Browse...')")
+            lines.append(f"def _browse_pick_{name}():")
+            lines.append("    from PySide6.QtWidgets import QFileDialog")
+            lines.append(f"    picked, _ = QFileDialog.getSaveFileName(None, 'Save Image', widgets[{name!r}].text(), 'PNG (*.png);;JPEG (*.jpg *.jpeg);;All Files (*)')")
+            lines.append(f"    if picked: widgets[{name!r}].setText(picked)")
+            lines.append(f"_browse_btn_{name}.clicked.connect(_browse_pick_{name})")
+            lines.append(f"_row_{name}.addWidget(widgets[{name!r}])")
+            lines.append(f"_row_{name}.addWidget(_browse_btn_{name})")
+            lines.append(f"layout.addLayout(_row_{name})")
+            continue
         elif w.kind == "int":
             lo = int(w.minimum) if w.minimum is not None else 0
             hi = int(w.maximum) if w.maximum is not None else 100000
@@ -83,7 +96,7 @@ def _gui_code(node_def: NodeDef) -> str:
 
 
 def _getter_expr(w: Widget) -> str:
-    if w.kind == "text":
+    if w.kind in ("text", "file"):
         return f"widgets[{w.param!r}].text()"
     return f"widgets[{w.param!r}].value()"
 
@@ -112,7 +125,7 @@ def _values_code(node_def: NodeDef) -> str:
 
     init_lines = ["def set_initial_state(widgets, state):"]
     for w in node_def.widgets:
-        if w.kind == "text":
+        if w.kind in ("text", "file"):
             init_lines.append(
                 f"    if {w.param!r} in state: widgets[{w.param!r}].setText(state[{w.param!r}])")
         else:

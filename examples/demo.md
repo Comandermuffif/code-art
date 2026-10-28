@@ -1,18 +1,18 @@
 # code-art demo
 
-Two generative-art chains built with code-art nodes.
+A generative-art flow ending in an image saved to disk.
 
-## Node: Linear Gradient (ID: 4385a5ee-2166-4891-8cb8-2bd5443384af)
+## Node: Linear Gradient (ID: f4cedaa3-facd-4f6a-aa5e-a2432efd2a6a)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "4385a5ee-2166-4891-8cb8-2bd5443384af",
+  "uuid": "f4cedaa3-facd-4f6a-aa5e-a2432efd2a6a",
   "title": "Linear Gradient",
   "pos": [
-    -600.0,
-    -300.0
+    -750.0,
+    -150.0
   ],
   "size": [
     250,
@@ -51,17 +51,17 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Invert (ID: 294331e4-8b21-4b25-8c40-45817b74ecbf)
+## Node: Invert (ID: f7e19f90-9f8f-463c-bf61-2ec7fc287e4f)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "294331e4-8b21-4b25-8c40-45817b74ecbf",
+  "uuid": "f7e19f90-9f8f-463c-bf61-2ec7fc287e4f",
   "title": "Invert",
   "pos": [
-    -350.0,
-    -300.0
+    -500.0,
+    -150.0
   ],
   "size": [
     250,
@@ -100,17 +100,17 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Draw Circles (ID: 6e16c7ac-9aef-4558-bc43-d14d2babcc26)
+## Node: Draw Circles (ID: 7ccbd926-0c1e-4b93-ac30-8583d0e2d63c)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "6e16c7ac-9aef-4558-bc43-d14d2babcc26",
+  "uuid": "7ccbd926-0c1e-4b93-ac30-8583d0e2d63c",
   "title": "Draw Circles",
   "pos": [
-    -80.0,
-    -300.0
+    -250.0,
+    -150.0
   ],
   "size": [
     250,
@@ -201,28 +201,28 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Grid (ID: 713915fd-a6ec-4672-aab0-3983acffdddb)
+## Node: Save Image (ID: 02e2c651-eb72-48d5-a3d5-001cc8d25b37)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "713915fd-a6ec-4672-aab0-3983acffdddb",
-  "title": "Grid",
+  "uuid": "02e2c651-eb72-48d5-a3d5-001cc8d25b37",
+  "title": "Save Image",
   "pos": [
-    -600.0,
-    200.0
+    0.0,
+    -150.0
   ],
   "size": [
     250,
-    150
+    167
   ],
   "colors": {
     "title": "#2a2a2a",
     "body": "#141414"
   },
   "gui_state": {
-    "colors": "#ff0000,#00ff00,#0000ff,#ffff00"
+    "path": "generated/demo.png"
   }
 }
 ```
@@ -231,125 +231,50 @@ def set_initial_state(widgets, state):
 
 ```python
 @node_entry
-def grid(colors: str = "#ff0000,#00ff00,#0000ff,#ffff00") -> "ColorMode":
-    from models import FloatColor
-    from nodes.color.grid import GridColorMode
-    return GridColorMode(FloatColor.fromHexList(colors))
+def save_image(image: "QImage" = None, path: str = "output.png") -> "str":
+    """@outputs: saved_path"""
+    import os
+    if image is None:
+        raise ValueError("No image to save - connect a draw node's image output")
+    if not path:
+        raise ValueError("No output path set")
+    path = os.path.abspath(os.path.expanduser(path))
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    if not image.save(path):
+        raise ValueError(f"Failed to save image (unsupported extension?): {path}")
+    return path
 
 ```
 
 ### GUI Definition
 
 ```python
-widgets['colors'] = QtWidgets.QLineEdit('#ff0000,#00ff00,#0000ff,#ffff00')
-layout.addWidget(widgets['colors'])
+widgets['path'] = QtWidgets.QLineEdit('output.png')
+_row_path = QtWidgets.QHBoxLayout()
+_browse_btn_path = QtWidgets.QPushButton('Browse...')
+def _browse_pick_path():
+    from PySide6.QtWidgets import QFileDialog
+    picked, _ = QFileDialog.getSaveFileName(None, 'Save Image', widgets['path'].text(), 'PNG (*.png);;JPEG (*.jpg *.jpeg);;All Files (*)')
+    if picked: widgets['path'].setText(picked)
+_browse_btn_path.clicked.connect(_browse_pick_path)
+_row_path.addWidget(widgets['path'])
+_row_path.addWidget(_browse_btn_path)
+layout.addLayout(_row_path)
 ```
 
 ### GUI State Handler
 
 ```python
 def get_values(widgets):
-    return {'colors': widgets['colors'].text()}
+    return {'path': widgets['path'].text()}
 
 def set_values(widgets, outputs):
     pass
 
 def set_initial_state(widgets, state):
-    if 'colors' in state: widgets['colors'].setText(state['colors'])
-
-```
-
-
-## Node: Draw Hexagon (ID: 1fb3b8ca-f6f0-468a-b5ac-ca3cf31f3a9f)
-
-### Metadata
-
-```json
-{
-  "uuid": "1fb3b8ca-f6f0-468a-b5ac-ca3cf31f3a9f",
-  "title": "Draw Hexagon",
-  "pos": [
-    -350.0,
-    200.0
-  ],
-  "size": [
-    250,
-    242
-  ],
-  "colors": {
-    "title": "#2a2a2a",
-    "body": "#141414"
-  },
-  "gui_state": {
-    "count": 12,
-    "radious": 0.8,
-    "width": 512,
-    "height": 512
-  }
-}
-```
-
-### Logic
-
-```python
-@node_entry
-def hexagon(field: "ColorMode" = None, count: int = 12, radious: float = 0.8, width: int = 512, height: int = 512) -> "QImage":
-    """@outputs: image"""
-    from nodes.draw._render import render_to_qimage
-    from nodes.draw.hexagon import draw_hexagon
-    return render_to_qimage(field, draw_hexagon, width, height, count=count, radious=radious)
-
-```
-
-### GUI Definition
-
-```python
-widgets['count'] = QtWidgets.QSpinBox()
-widgets['count'].setRange(1, 100)
-widgets['count'].setValue(12)
-layout.addWidget(widgets['count'])
-widgets['radious'] = QtWidgets.QDoubleSpinBox()
-widgets['radious'].setRange(0.0, 2.0)
-widgets['radious'].setDecimals(3)
-widgets['radious'].setValue(0.8)
-layout.addWidget(widgets['radious'])
-widgets['width'] = QtWidgets.QSpinBox()
-widgets['width'].setRange(16, 2048)
-widgets['width'].setValue(512)
-layout.addWidget(widgets['width'])
-widgets['height'] = QtWidgets.QSpinBox()
-widgets['height'].setRange(16, 2048)
-widgets['height'].setValue(512)
-layout.addWidget(widgets['height'])
-widgets['preview'] = QtWidgets.QLabel()
-widgets['preview'].setMinimumSize(160, 160)
-from PySide6.QtCore import Qt
-widgets['preview'].setAlignment(Qt.AlignmentFlag.AlignCenter)
-layout.addWidget(widgets['preview'])
-```
-
-### GUI State Handler
-
-```python
-def get_values(widgets):
-    return {'count': widgets['count'].value(), 'radious': widgets['radious'].value(), 'width': widgets['width'].value(), 'height': widgets['height'].value()}
-
-def set_values(widgets, outputs):
-    img = outputs.get('image')
-    preview = widgets.get('preview')
-    if img is not None and preview is not None:
-        from PySide6.QtGui import QPixmap
-        from PySide6.QtCore import Qt
-        pix = QPixmap.fromImage(img)
-        preview.setPixmap(pix.scaled(preview.size(),
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation))
-
-def set_initial_state(widgets, state):
-    if 'count' in state: widgets['count'].setValue(state['count'])
-    if 'radious' in state: widgets['radious'].setValue(state['radious'])
-    if 'width' in state: widgets['width'].setValue(state['width'])
-    if 'height' in state: widgets['height'].setValue(state['height'])
+    if 'path' in state: widgets['path'].setText(state['path'])
 
 ```
 
@@ -359,51 +284,51 @@ def set_initial_state(widgets, state):
 ```json
 [
   {
-    "start_node_uuid": "4385a5ee-2166-4891-8cb8-2bd5443384af",
-    "start_pin_uuid": "619ed263-e54b-43b9-aab1-bdd5eba50186",
+    "start_node_uuid": "f4cedaa3-facd-4f6a-aa5e-a2432efd2a6a",
+    "start_pin_uuid": "37fa527f-4d9a-4211-92bb-8d36b3039ab8",
     "start_pin_name": "output_1",
-    "end_node_uuid": "294331e4-8b21-4b25-8c40-45817b74ecbf",
-    "end_pin_uuid": "877f1d63-8138-4b60-bc16-ff6a175fdd9f",
+    "end_node_uuid": "f7e19f90-9f8f-463c-bf61-2ec7fc287e4f",
+    "end_pin_uuid": "ff402c26-fddd-4d71-892f-e5609f045ace",
     "end_pin_name": "child"
   },
   {
-    "start_node_uuid": "4385a5ee-2166-4891-8cb8-2bd5443384af",
-    "start_pin_uuid": "7f57f489-ebe1-4933-a5ab-70a7bf502648",
+    "start_node_uuid": "f4cedaa3-facd-4f6a-aa5e-a2432efd2a6a",
+    "start_pin_uuid": "459a998c-ef54-4b63-a30d-6e1b5dab066f",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "294331e4-8b21-4b25-8c40-45817b74ecbf",
-    "end_pin_uuid": "32e8bab5-29bd-48e3-b653-9dfb808b9a2f",
+    "end_node_uuid": "f7e19f90-9f8f-463c-bf61-2ec7fc287e4f",
+    "end_pin_uuid": "35059716-3234-4cf1-97b3-6f0be225eb4e",
     "end_pin_name": "exec_in"
   },
   {
-    "start_node_uuid": "294331e4-8b21-4b25-8c40-45817b74ecbf",
-    "start_pin_uuid": "549fa32d-2159-4e74-9058-d9bbe7151458",
+    "start_node_uuid": "f7e19f90-9f8f-463c-bf61-2ec7fc287e4f",
+    "start_pin_uuid": "79bd2780-953e-424d-a53d-a2f563fb36cb",
     "start_pin_name": "output_1",
-    "end_node_uuid": "6e16c7ac-9aef-4558-bc43-d14d2babcc26",
-    "end_pin_uuid": "b2219b9d-d1f5-419f-aa49-18b5ea2b2cd4",
+    "end_node_uuid": "7ccbd926-0c1e-4b93-ac30-8583d0e2d63c",
+    "end_pin_uuid": "4dcf79cb-94a7-483d-a7b2-0ebc620e93f9",
     "end_pin_name": "field"
   },
   {
-    "start_node_uuid": "294331e4-8b21-4b25-8c40-45817b74ecbf",
-    "start_pin_uuid": "b6d181b6-f55f-49f5-bb47-5d78eb90c464",
+    "start_node_uuid": "f7e19f90-9f8f-463c-bf61-2ec7fc287e4f",
+    "start_pin_uuid": "c710f3bd-48e7-4c02-90b3-86c49a2d4dc3",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "6e16c7ac-9aef-4558-bc43-d14d2babcc26",
-    "end_pin_uuid": "6b4e20f4-e2e2-4083-b193-90b50c8c0bf7",
+    "end_node_uuid": "7ccbd926-0c1e-4b93-ac30-8583d0e2d63c",
+    "end_pin_uuid": "b7ea652d-f606-4383-a2bb-fff475377a0f",
     "end_pin_name": "exec_in"
   },
   {
-    "start_node_uuid": "713915fd-a6ec-4672-aab0-3983acffdddb",
-    "start_pin_uuid": "f331653d-3f0a-41fb-868b-0aa56cf1da8d",
-    "start_pin_name": "output_1",
-    "end_node_uuid": "1fb3b8ca-f6f0-468a-b5ac-ca3cf31f3a9f",
-    "end_pin_uuid": "cb5f68ee-6546-439c-8b6d-ac016aafabcd",
-    "end_pin_name": "field"
+    "start_node_uuid": "7ccbd926-0c1e-4b93-ac30-8583d0e2d63c",
+    "start_pin_uuid": "9d1270d9-88d8-4afb-ba9a-933cd7689cfb",
+    "start_pin_name": "image",
+    "end_node_uuid": "02e2c651-eb72-48d5-a3d5-001cc8d25b37",
+    "end_pin_uuid": "3aa5ccac-9543-49b8-a6aa-8deb65a8be18",
+    "end_pin_name": "image"
   },
   {
-    "start_node_uuid": "713915fd-a6ec-4672-aab0-3983acffdddb",
-    "start_pin_uuid": "85f05e6e-eada-4ba0-9442-a75413258e73",
+    "start_node_uuid": "7ccbd926-0c1e-4b93-ac30-8583d0e2d63c",
+    "start_pin_uuid": "e3840d33-1c9d-46bc-8e58-0b65f3a5331e",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "1fb3b8ca-f6f0-468a-b5ac-ca3cf31f3a9f",
-    "end_pin_uuid": "0e44d9b1-38d9-4545-8afd-e9d6aa466079",
+    "end_node_uuid": "02e2c651-eb72-48d5-a3d5-001cc8d25b37",
+    "end_pin_uuid": "1a9547a8-0b87-4045-8041-a0d05b43d1d4",
     "end_pin_name": "exec_in"
   }
 ]

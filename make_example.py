@@ -2,7 +2,8 @@
 
 Run with:  python make_example.py
 
-Demonstrates a color-mode chain feeding two draw-mode previews.
+Demonstrates one flow: a color mode through a modifier into a draw mode,
+ending in a Save Image node that writes the result to disk.
 """
 from __future__ import annotations
 
@@ -37,22 +38,20 @@ def main():
     app = QApplication(sys.argv)
     graph = NodeGraph()
 
-    # Chain 1: Linear Gradient -> Invert -> Circles.
-    lin = N.add_node(graph, N.LINEAR_GRADIENT, pos=(-600, -300))
-    inv = N.add_node(graph, N.INVERT, pos=(-350, -300))
-    circ = N.add_node(graph, N.DRAW_CIRCLES, pos=(-80, -300))
+    # Single flow: Linear Gradient -> Invert -> Circles -> Save Image.
+    lin = N.add_node(graph, N.LINEAR_GRADIENT, pos=(-750, -150))
+    inv = N.add_node(graph, N.INVERT, pos=(-500, -150))
+    circ = N.add_node(graph, N.DRAW_CIRCLES, pos=(-250, -150))
+    save = N.add_node(graph, N.SAVE_IMAGE, pos=(0, -150))
+    save.gui_widgets["path"].setText("generated/demo.png")
     wire(graph, lin, "output_1", inv, "child")
     wire(graph, inv, "output_1", circ, "field")
-
-    # Chain 2: Grid -> Hexagon.
-    grid = N.add_node(graph, N.GRID, pos=(-600, 200))
-    hexa = N.add_node(graph, N.DRAW_HEXAGON, pos=(-350, 200))
-    wire(graph, grid, "output_1", hexa, "field")
+    wire(graph, circ, "image", save, "image")
 
     out = os.path.join(_HERE, "examples", "demo.md")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     save_flow_file(out, graph.serialize(), title="code-art demo",
-                   description="Two generative-art chains built with code-art nodes.")
+                   description="A generative-art flow ending in an image saved to disk.")
     print("wrote", out)
 
 

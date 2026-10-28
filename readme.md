@@ -53,6 +53,9 @@ python app.py
   These wrap a child color mode.
 - **Draw**: Circles, Squares, Triangles, Hexagon, Pattern, Voronoi. Each samples
   its input color field and renders a `QImage` preview.
+- **Output**: Save Image. Takes a draw node's `image` output and writes it to
+  disk on execute — set the path in the widget or via *Browse...*; the format is
+  inferred from the extension (`.png`, `.jpg`).
 
 ## Layout
 
@@ -65,6 +68,7 @@ python app.py
   - `nodes/modify/` — color-modifier nodes.
   - `nodes/draw/` — draw-mode nodes (QPainter ports of the old cairo draw
     modes) with `_render.py` holding the shared rendering helpers.
+  - `nodes/output/` — output nodes (write the final image to disk).
 - `models/` — shared data types (`FloatColor`, `Point`).
 - `make_example.py` — writes a sample graph to `examples/demo.md`.
 - `vendor/pyflowgraph/` — PyFlowGraph (git submodule).
