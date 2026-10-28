@@ -40,6 +40,8 @@ python app.py
 - **Wire nodes**: drag from an output pin (right) to an input pin (left). A node
   needs both a data connection (e.g. color field → draw node) and an execution
   connection (the thin exec pins) so it runs in order.
+- **Delete**: select nodes and/or edges and press `Delete` (or `Backspace`), or
+  use *Edit → Delete*. Deletions are undoable with `Ctrl+Z` / `Ctrl+Shift+Z`.
 - **Execute**: press `F5` (or *Run → Execute Graph*). Draw nodes show the rendered
   image in an inline preview.
 - **Save / Load**: *File → Save/Load* writes/reads a `.md` graph.

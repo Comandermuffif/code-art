@@ -18,15 +18,45 @@ sys.path.insert(0, os.path.join(_HERE, "vendor", "pyflowgraph", "src"))
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QTextEdit, QDockWidget, QMenu, QFileDialog,
 )
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction, QKeySequence, QKeyEvent
 from PySide6.QtCore import Qt
 
 from core.node_graph import NodeGraph
+from commands.node.batch_operations import DeleteMultipleCommand
 from ui.editor.node_editor_view import NodeEditorView
 from execution.graph_executor import GraphExecutor
 from data.flow_format import load_flow_file, save_flow_file
 
 import nodes as N
+
+
+def delete_selected(graph) -> int:
+    """Delete selected nodes and connections as a single undoable step.
+
+    Uses the same DeleteMultipleCommand as the scene's built-in Delete-key
+    handling, so nodes, edges, and groups all go in one undo unit.
+    Returns the number of deleted items (0 if nothing was selected).
+    """
+    selected = graph.selectedItems()
+    if not selected:
+        return 0
+    if graph.execute_command(DeleteMultipleCommand(graph, selected)):
+        return len(selected)
+    return 0
+
+
+class CodeArtView(NodeEditorView):
+    """NodeEditorView with Backspace deleting the current selection.
+
+    Delete itself is already handled by the scene (NodeGraph.keyPressEvent).
+    """
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key_Backspace and not event.modifiers():
+            if delete_selected(self.scene()):
+                event.accept()
+                return
+        super().keyPressEvent(event)
 
 
 class CodeArtWindow(QMainWindow):
@@ -37,7 +67,7 @@ class CodeArtWindow(QMainWindow):
 
         # Node editor scene + view.
         self.graph = NodeGraph(self)
-        self.view = NodeEditorView(self.graph, self)
+        self.view = CodeArtView(self.graph, self)
         self.setCentralWidget(self.view)
 
         # Execution output log.
@@ -66,6 +96,12 @@ class CodeArtWindow(QMainWindow):
 
         run_menu = menu_bar.addMenu("&Run")
         run_menu.addAction(self._action("&Execute Graph", self.execute_graph, "F5"))
+
+        edit_menu = menu_bar.addMenu("&Edit")
+        edit_menu.addAction(self._action("&Undo", self.graph.undo_last_command, "Ctrl+Z"))
+        edit_menu.addAction(self._action("&Redo", self.graph.redo_last_command, "Ctrl+Shift+Z"))
+        edit_menu.addSeparator()
+        edit_menu.addAction(self._action("&Delete", self.on_delete, "Del"))
 
         # Nodes menu, grouped by category.
         nodes_menu = menu_bar.addMenu("&Nodes")
@@ -110,6 +146,14 @@ class CodeArtWindow(QMainWindow):
                 action.triggered.connect(
                     lambda checked=False, nd=node_def, sp=scene_pos: self.add_node_def(nd, sp))
         menu.exec(self.mapToGlobal(self.view.mapFromScene(scene_pos)) if scene_pos else self.cursor().pos())
+
+    # --- Deletion -----------------------------------------------------------
+
+    def on_delete(self):
+        """Delete the selected nodes/connections (Edit → Delete)."""
+        deleted = delete_selected(self.graph)
+        if deleted:
+            self.output_log.append(f"Deleted {deleted} item(s)")
 
     # --- Execution -----------------------------------------------------------
 
