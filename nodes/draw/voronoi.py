@@ -1,3 +1,4 @@
+"""Voronoi draw mode: fill randomly seeded Voronoi regions."""
 import random
 
 from scipy.spatial import Voronoi
@@ -5,7 +6,8 @@ from scipy.spatial import Voronoi
 from PySide6.QtGui import QPainter, QPen, QPolygonF
 from PySide6.QtCore import QPointF
 
-from render import qcolor
+from nodes.base import NodeDef, Widget
+from nodes.draw._render import qcolor, render_to_qimage
 
 
 def draw_voronoi(
@@ -50,3 +52,21 @@ def draw_voronoi(
         painter.setBrush(color)
         painter.setPen(QPen(color, 1))
         painter.drawPolygon(polygon)
+
+
+DRAW_VORONOI = NodeDef(
+    title="Draw Voronoi", category="Draw",
+    code='''@node_entry
+def voronoi_draw(field: "ColorMode" = None, count: int = 300, width: int = 512, height: int = 512) -> "QImage":
+    """@outputs: image"""
+    from nodes.draw._render import render_to_qimage
+    from nodes.draw.voronoi import draw_voronoi
+    return render_to_qimage(field, draw_voronoi, width, height, count=count)
+''',
+    widgets=[
+        Widget("count", "int", 300, 5, 5000),
+        Widget("width", "int", 512, 16, 2048),
+        Widget("height", "int", 512, 16, 2048),
+    ],
+    show_output=True,
+)

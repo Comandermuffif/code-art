@@ -47,7 +47,7 @@ python app.py
 ## Nodes
 
 - **Color** sources: Gradient, Grid, Random, Arc, Linear Gradient. Each builds a
-  real `color_modes` object and passes it downstream by reference. Enter a
+  real `ColorMode` object and passes it downstream by reference. Enter a
   palette as comma-separated hex (e.g. `#ff0000,#00ff00,#0000ff`).
 - **Color Modifier**: Clamp, Invert, Transform, Globe, Normal, Voronoi, Average.
   These wrap a child color mode.
@@ -57,9 +57,15 @@ python app.py
 ## Layout
 
 - `app.py` — the editor window (embeds the PyFlowGraph scene/view).
-- `nodes.py` — the code-art node library (function source + inline GUI).
-- `render/` — QPainter draw modes (a port of the old cairo `draw_modes`).
-- `color_modes/`, `models/` — the color-field library the nodes build on.
+- `nodes/` — the node library, one node per file:
+  - `nodes/base.py` — shared `NodeDef`/`Widget` structures, GUI-code generation,
+    and the `add_node` helper.
+  - `nodes/color/` — color-source nodes (implementation + node definition in
+    each file).
+  - `nodes/modify/` — color-modifier nodes.
+  - `nodes/draw/` — draw-mode nodes (QPainter ports of the old cairo draw
+    modes) with `_render.py` holding the shared rendering helpers.
+- `models/` — shared data types (`FloatColor`, `Point`).
 - `make_example.py` — writes a sample graph to `examples/demo.md`.
 - `vendor/pyflowgraph/` — PyFlowGraph (git submodule).
 

@@ -1,18 +1,7 @@
-"""Qt (QPainter) rendering for code-art.
-
-Port of the old cairo draw modes onto PySide6. Each draw_* function has the
-signature:
-
-    def draw_x(painter: QPainter, color_mode, width: int, height: int, **params) -> None
-
-where `color_mode` is any object exposing ``getColor(x, y) -> FloatColor`` with
-x, y in [0, 1]. Use :func:`render_to_qimage` to produce a QImage from a color
-mode plus one of these draw functions.
-"""
+"""Shared QPainter rendering helpers for the draw nodes."""
 from __future__ import annotations
 
-from PySide6.QtGui import QImage, QPainter, QColor, QPen
-from PySide6.QtCore import Qt, QPointF
+from PySide6.QtGui import QImage, QPainter, QColor
 
 from models import FloatColor
 

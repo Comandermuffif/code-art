@@ -3,7 +3,7 @@
 Run with:  python app.py
 
 Nodes are Python functions (code-as-nodes). Color-mode nodes build real
-``color_modes`` objects and hand them downstream by reference; draw-mode nodes
+``ColorMode`` objects and hand them downstream by reference; draw-mode nodes
 sample a color mode and render it with Qt (QPainter/QImage) into an inline
 preview. Graphs save/load as human-readable Markdown (.md).
 """

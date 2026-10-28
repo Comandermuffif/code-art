@@ -1,7 +1,9 @@
+"""Triangles draw mode: a grid of interlocking filled triangles."""
 from PySide6.QtGui import QPainter, QPen, QPolygonF
 from PySide6.QtCore import QPointF
 
-from render import qcolor
+from nodes.base import NodeDef, Widget
+from nodes.draw._render import qcolor, render_to_qimage
 
 
 def draw_triangles(
@@ -43,3 +45,21 @@ def draw_triangles(
                 painter.setBrush(color)
                 painter.setPen(QPen(color, 1))
                 painter.drawPolygon(triangle)
+
+
+DRAW_TRIANGLES = NodeDef(
+    title="Draw Triangles", category="Draw",
+    code='''@node_entry
+def triangles(field: "ColorMode" = None, count: int = 30, width: int = 512, height: int = 512) -> "QImage":
+    """@outputs: image"""
+    from nodes.draw._render import render_to_qimage
+    from nodes.draw.triangles import draw_triangles
+    return render_to_qimage(field, draw_triangles, width, height, count=count)
+''',
+    widgets=[
+        Widget("count", "int", 30, 1, 300),
+        Widget("width", "int", 512, 16, 2048),
+        Widget("height", "int", 512, 16, 2048),
+    ],
+    show_output=True,
+)

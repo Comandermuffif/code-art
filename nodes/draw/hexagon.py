@@ -1,10 +1,12 @@
+"""Hexagon draw mode: a tiling of hexagons around the canvas center."""
 import math
 
 from PySide6.QtGui import QPainter, QPen, QPolygonF
 from PySide6.QtCore import QPointF
 
 from models import Point
-from render import qcolor
+from nodes.base import NodeDef, Widget
+from nodes.draw._render import qcolor, render_to_qimage
 
 
 def _translate(offset: Point) -> Point:
@@ -57,3 +59,22 @@ def draw_hexagon(
             painter.setBrush(color)
             painter.setPen(QPen(color, 1))
             painter.drawPolygon(polygon)
+
+
+DRAW_HEXAGON = NodeDef(
+    title="Draw Hexagon", category="Draw",
+    code='''@node_entry
+def hexagon(field: "ColorMode" = None, count: int = 12, radious: float = 0.8, width: int = 512, height: int = 512) -> "QImage":
+    """@outputs: image"""
+    from nodes.draw._render import render_to_qimage
+    from nodes.draw.hexagon import draw_hexagon
+    return render_to_qimage(field, draw_hexagon, width, height, count=count, radious=radious)
+''',
+    widgets=[
+        Widget("count", "int", 12, 1, 100),
+        Widget("radious", "float", 0.8, 0.0, 2.0),
+        Widget("width", "int", 512, 16, 2048),
+        Widget("height", "int", 512, 16, 2048),
+    ],
+    show_output=True,
+)

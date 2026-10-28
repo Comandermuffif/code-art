@@ -2,13 +2,13 @@
 
 Two generative-art chains built with code-art nodes.
 
-## Node: Linear Gradient (ID: 574f8021-dfce-4bf2-9cda-48416981868d)
+## Node: Linear Gradient (ID: 4385a5ee-2166-4891-8cb8-2bd5443384af)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "574f8021-dfce-4bf2-9cda-48416981868d",
+  "uuid": "4385a5ee-2166-4891-8cb8-2bd5443384af",
   "title": "Linear Gradient",
   "pos": [
     -600.0,
@@ -31,7 +31,7 @@ Two generative-art chains built with code-art nodes.
 ```python
 @node_entry
 def linear_gradient() -> "ColorMode":
-    from color_modes.linear_gradient import LinearGradientColorMode
+    from nodes.color.linear_gradient import LinearGradientColorMode
     return LinearGradientColorMode()
 
 ```
@@ -51,13 +51,13 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Invert (ID: ac510033-0a2f-4666-af40-e9ba312ed1a0)
+## Node: Invert (ID: 294331e4-8b21-4b25-8c40-45817b74ecbf)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "ac510033-0a2f-4666-af40-e9ba312ed1a0",
+  "uuid": "294331e4-8b21-4b25-8c40-45817b74ecbf",
   "title": "Invert",
   "pos": [
     -350.0,
@@ -80,7 +80,7 @@ def set_initial_state(widgets, state):
 ```python
 @node_entry
 def invert(child: "ColorMode" = None) -> "ColorMode":
-    from color_modes.modify.invert import InvertColorMode
+    from nodes.modify.invert import InvertColorMode
     return InvertColorMode(child)
 
 ```
@@ -100,13 +100,13 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Draw Circles (ID: 9326ffe4-262d-457a-b578-2bd742049d97)
+## Node: Draw Circles (ID: 6e16c7ac-9aef-4558-bc43-d14d2babcc26)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "9326ffe4-262d-457a-b578-2bd742049d97",
+  "uuid": "6e16c7ac-9aef-4558-bc43-d14d2babcc26",
   "title": "Draw Circles",
   "pos": [
     -80.0,
@@ -136,8 +136,8 @@ def set_initial_state(widgets, state):
 @node_entry
 def circles(field: "ColorMode" = None, count: int = 300, min_size: float = 2, max_size: float = 20, width: int = 512, height: int = 512) -> "QImage":
     """@outputs: image"""
-    from render import render_to_qimage
-    from render.circles import draw_circles
+    from nodes.draw._render import render_to_qimage
+    from nodes.draw.circles import draw_circles
     return render_to_qimage(field, draw_circles, width, height, count=count, min_size=min_size, max_size=max_size)
 
 ```
@@ -201,13 +201,13 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Grid (ID: 153c241e-432c-4c24-8e87-a92e9d81e756)
+## Node: Grid (ID: 713915fd-a6ec-4672-aab0-3983acffdddb)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "153c241e-432c-4c24-8e87-a92e9d81e756",
+  "uuid": "713915fd-a6ec-4672-aab0-3983acffdddb",
   "title": "Grid",
   "pos": [
     -600.0,
@@ -233,7 +233,7 @@ def set_initial_state(widgets, state):
 @node_entry
 def grid(colors: str = "#ff0000,#00ff00,#0000ff,#ffff00") -> "ColorMode":
     from models import FloatColor
-    from color_modes.grid import GridColorMode
+    from nodes.color.grid import GridColorMode
     return GridColorMode(FloatColor.fromHexList(colors))
 
 ```
@@ -260,13 +260,13 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Draw Hexagon (ID: bd094400-ebd8-4f59-a737-818f437a267d)
+## Node: Draw Hexagon (ID: 1fb3b8ca-f6f0-468a-b5ac-ca3cf31f3a9f)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "bd094400-ebd8-4f59-a737-818f437a267d",
+  "uuid": "1fb3b8ca-f6f0-468a-b5ac-ca3cf31f3a9f",
   "title": "Draw Hexagon",
   "pos": [
     -350.0,
@@ -295,8 +295,8 @@ def set_initial_state(widgets, state):
 @node_entry
 def hexagon(field: "ColorMode" = None, count: int = 12, radious: float = 0.8, width: int = 512, height: int = 512) -> "QImage":
     """@outputs: image"""
-    from render import render_to_qimage
-    from render.hexagon import draw_hexagon
+    from nodes.draw._render import render_to_qimage
+    from nodes.draw.hexagon import draw_hexagon
     return render_to_qimage(field, draw_hexagon, width, height, count=count, radious=radious)
 
 ```
@@ -359,51 +359,51 @@ def set_initial_state(widgets, state):
 ```json
 [
   {
-    "start_node_uuid": "574f8021-dfce-4bf2-9cda-48416981868d",
-    "start_pin_uuid": "13a1c034-a6ae-4c01-b452-ca4369c85f17",
+    "start_node_uuid": "4385a5ee-2166-4891-8cb8-2bd5443384af",
+    "start_pin_uuid": "619ed263-e54b-43b9-aab1-bdd5eba50186",
     "start_pin_name": "output_1",
-    "end_node_uuid": "ac510033-0a2f-4666-af40-e9ba312ed1a0",
-    "end_pin_uuid": "b5975314-7e1e-42f6-8b72-ef4714a151a9",
+    "end_node_uuid": "294331e4-8b21-4b25-8c40-45817b74ecbf",
+    "end_pin_uuid": "877f1d63-8138-4b60-bc16-ff6a175fdd9f",
     "end_pin_name": "child"
   },
   {
-    "start_node_uuid": "574f8021-dfce-4bf2-9cda-48416981868d",
-    "start_pin_uuid": "7221abf2-f0eb-4519-9557-563e8f1588dd",
+    "start_node_uuid": "4385a5ee-2166-4891-8cb8-2bd5443384af",
+    "start_pin_uuid": "7f57f489-ebe1-4933-a5ab-70a7bf502648",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "ac510033-0a2f-4666-af40-e9ba312ed1a0",
-    "end_pin_uuid": "8ca27dff-0636-4bf6-812a-b9037fa5fb24",
+    "end_node_uuid": "294331e4-8b21-4b25-8c40-45817b74ecbf",
+    "end_pin_uuid": "32e8bab5-29bd-48e3-b653-9dfb808b9a2f",
     "end_pin_name": "exec_in"
   },
   {
-    "start_node_uuid": "ac510033-0a2f-4666-af40-e9ba312ed1a0",
-    "start_pin_uuid": "31edef48-673a-498d-9471-669f0b2ca8a6",
+    "start_node_uuid": "294331e4-8b21-4b25-8c40-45817b74ecbf",
+    "start_pin_uuid": "549fa32d-2159-4e74-9058-d9bbe7151458",
     "start_pin_name": "output_1",
-    "end_node_uuid": "9326ffe4-262d-457a-b578-2bd742049d97",
-    "end_pin_uuid": "04ec4354-a22c-4545-b810-327dbb0a01c5",
+    "end_node_uuid": "6e16c7ac-9aef-4558-bc43-d14d2babcc26",
+    "end_pin_uuid": "b2219b9d-d1f5-419f-aa49-18b5ea2b2cd4",
     "end_pin_name": "field"
   },
   {
-    "start_node_uuid": "ac510033-0a2f-4666-af40-e9ba312ed1a0",
-    "start_pin_uuid": "be86bd94-441e-4954-a7f8-6b4b5f0aa806",
+    "start_node_uuid": "294331e4-8b21-4b25-8c40-45817b74ecbf",
+    "start_pin_uuid": "b6d181b6-f55f-49f5-bb47-5d78eb90c464",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "9326ffe4-262d-457a-b578-2bd742049d97",
-    "end_pin_uuid": "3278b3df-7ffa-48f4-a690-59d5a703a2dc",
+    "end_node_uuid": "6e16c7ac-9aef-4558-bc43-d14d2babcc26",
+    "end_pin_uuid": "6b4e20f4-e2e2-4083-b193-90b50c8c0bf7",
     "end_pin_name": "exec_in"
   },
   {
-    "start_node_uuid": "153c241e-432c-4c24-8e87-a92e9d81e756",
-    "start_pin_uuid": "45506344-a5ad-484a-a692-a03b353d5aad",
+    "start_node_uuid": "713915fd-a6ec-4672-aab0-3983acffdddb",
+    "start_pin_uuid": "f331653d-3f0a-41fb-868b-0aa56cf1da8d",
     "start_pin_name": "output_1",
-    "end_node_uuid": "bd094400-ebd8-4f59-a737-818f437a267d",
-    "end_pin_uuid": "fb8634d0-93f1-419a-a5f4-1fc8cda5a252",
+    "end_node_uuid": "1fb3b8ca-f6f0-468a-b5ac-ca3cf31f3a9f",
+    "end_pin_uuid": "cb5f68ee-6546-439c-8b6d-ac016aafabcd",
     "end_pin_name": "field"
   },
   {
-    "start_node_uuid": "153c241e-432c-4c24-8e87-a92e9d81e756",
-    "start_pin_uuid": "9061e40d-ddaf-40dd-a162-bfcefe6b6a8f",
+    "start_node_uuid": "713915fd-a6ec-4672-aab0-3983acffdddb",
+    "start_pin_uuid": "85f05e6e-eada-4ba0-9442-a75413258e73",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "bd094400-ebd8-4f59-a737-818f437a267d",
-    "end_pin_uuid": "faccd726-2adf-48f3-a76e-902182228f25",
+    "end_node_uuid": "1fb3b8ca-f6f0-468a-b5ac-ca3cf31f3a9f",
+    "end_pin_uuid": "0e44d9b1-38d9-4545-8afd-e9d6aa466079",
     "end_pin_name": "exec_in"
   }
 ]
