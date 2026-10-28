@@ -40,7 +40,7 @@ def draw_pattern(
 DRAW_PATTERN = NodeDef(
     title="Draw Pattern", category="Draw",
     code='''@node_entry
-def pattern(field: "ColorMode" = None, points: str = "0,0;1,0;0.5,1", count: int = 12, width: int = 512, height: int = 512) -> "QImage":
+def pattern(field: ColorMode = None, points: str = "0,0;1,0;0.5,1", count: int = 12, width: int = 512, height: int = 512) -> QImage:
     """@outputs: image"""
     from nodes.draw._render import render_to_qimage
     from nodes.draw.pattern import draw_pattern

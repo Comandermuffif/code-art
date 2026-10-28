@@ -24,7 +24,7 @@ class NormalColorMode(ColorMode):
 NORMAL = NodeDef(
     title="Normal", category="Color Modifier",
     code='''@node_entry
-def normal(child: "ColorMode" = None, x_divergence: float = 0.1, y_divergence: float = 0.1) -> "ColorMode":
+def normal(child: ColorMode = None, x_divergence: float = 0.1, y_divergence: float = 0.1) -> ColorMode:
     from nodes.modify.normal import NormalColorMode
     return NormalColorMode(child, x_divergence, y_divergence)
 ''',

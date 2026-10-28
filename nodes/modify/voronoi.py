@@ -34,7 +34,7 @@ class VoronoiColorMode(ColorMode):
 VORONOI = NodeDef(
     title="Voronoi", category="Color Modifier",
     code='''@node_entry
-def voronoi(child: "ColorMode" = None, count: int = 10) -> "ColorMode":
+def voronoi(child: ColorMode = None, count: int = 10) -> ColorMode:
     from nodes.modify.voronoi import VoronoiColorMode
     return VoronoiColorMode(child, count)
 ''',

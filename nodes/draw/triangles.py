@@ -50,7 +50,7 @@ def draw_triangles(
 DRAW_TRIANGLES = NodeDef(
     title="Draw Triangles", category="Draw",
     code='''@node_entry
-def triangles(field: "ColorMode" = None, count: int = 30, width: int = 512, height: int = 512) -> "QImage":
+def triangles(field: ColorMode = None, count: int = 30, width: int = 512, height: int = 512) -> QImage:
     """@outputs: image"""
     from nodes.draw._render import render_to_qimage
     from nodes.draw.triangles import draw_triangles

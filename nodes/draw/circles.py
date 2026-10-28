@@ -35,7 +35,7 @@ def draw_circles(
 DRAW_CIRCLES = NodeDef(
     title="Draw Circles", category="Draw",
     code='''@node_entry
-def circles(field: "ColorMode" = None, count: int = 300, min_size: float = 2, max_size: float = 20, width: int = 512, height: int = 512) -> "QImage":
+def circles(field: ColorMode = None, count: int = 300, min_size: float = 2, max_size: float = 20, width: int = 512, height: int = 512) -> QImage:
     """@outputs: image"""
     from nodes.draw._render import render_to_qimage
     from nodes.draw.circles import draw_circles

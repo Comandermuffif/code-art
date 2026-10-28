@@ -64,7 +64,7 @@ def draw_hexagon(
 DRAW_HEXAGON = NodeDef(
     title="Draw Hexagon", category="Draw",
     code='''@node_entry
-def hexagon(field: "ColorMode" = None, count: int = 12, radious: float = 0.8, width: int = 512, height: int = 512) -> "QImage":
+def hexagon(field: ColorMode = None, count: int = 12, radious: float = 0.8, width: int = 512, height: int = 512) -> QImage:
     """@outputs: image"""
     from nodes.draw._render import render_to_qimage
     from nodes.draw.hexagon import draw_hexagon

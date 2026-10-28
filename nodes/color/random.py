@@ -17,7 +17,7 @@ class RandomColorMode(ColorMode):
 RANDOM = NodeDef(
     title="Random", category="Color",
     code='''@node_entry
-def random(colors: str = "#ff0000,#00ff00,#0000ff") -> "ColorMode":
+def random(colors: str = "#ff0000,#00ff00,#0000ff") -> ColorMode:
     from models import FloatColor
     from nodes.color.random import RandomColorMode
     return RandomColorMode(FloatColor.fromHexList(colors))

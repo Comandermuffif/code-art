@@ -16,7 +16,7 @@ class InvertColorMode(ColorMode):
 INVERT = NodeDef(
     title="Invert", category="Color Modifier",
     code='''@node_entry
-def invert(child: "ColorMode" = None) -> "ColorMode":
+def invert(child: ColorMode = None) -> ColorMode:
     from nodes.modify.invert import InvertColorMode
     return InvertColorMode(child)
 ''',

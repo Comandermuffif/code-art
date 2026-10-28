@@ -36,7 +36,7 @@ class TransformColorMode(ColorMode):
 TRANSFORM = NodeDef(
     title="Transform", category="Color Modifier",
     code='''@node_entry
-def transform(child: "ColorMode" = None, x_offset: float = 0, y_offset: float = 0, x_scale: float = 1, y_scale: float = 1, angle_deg: float = 0) -> "ColorMode":
+def transform(child: ColorMode = None, x_offset: float = 0, y_offset: float = 0, x_scale: float = 1, y_scale: float = 1, angle_deg: float = 0) -> ColorMode:
     from nodes.modify.transform import TransformColorMode
     return TransformColorMode(child, x_offset, y_offset, x_scale, y_scale, angle_deg)
 ''',

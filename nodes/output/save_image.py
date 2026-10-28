@@ -5,7 +5,7 @@ from nodes.base import NodeDef, Widget
 SAVE_IMAGE = NodeDef(
     title="Save Image", category="Output",
     code='''@node_entry
-def save_image(image: "QImage" = None, path: str = "output.png") -> "str":
+def save_image(image: QImage = None, path: str = "output.png") -> str:
     """@outputs: saved_path"""
     import os
     if image is None:

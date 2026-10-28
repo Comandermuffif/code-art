@@ -33,7 +33,7 @@ def draw_squares(
 DRAW_SQUARES = NodeDef(
     title="Draw Squares", category="Draw",
     code='''@node_entry
-def squares(field: "ColorMode" = None, count: int = 30, width: int = 512, height: int = 512) -> "QImage":
+def squares(field: ColorMode = None, count: int = 30, width: int = 512, height: int = 512) -> QImage:
     """@outputs: image"""
     from nodes.draw._render import render_to_qimage
     from nodes.draw.squares import draw_squares

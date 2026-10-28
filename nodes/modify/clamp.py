@@ -18,7 +18,7 @@ class ClampColorMode(ColorMode):
 CLAMP = NodeDef(
     title="Clamp", category="Color Modifier",
     code='''@node_entry
-def clamp(child: "ColorMode" = None, threshold: float = 0.5) -> "ColorMode":
+def clamp(child: ColorMode = None, threshold: float = 0.5) -> ColorMode:
     from nodes.modify.clamp import ClampColorMode
     return ClampColorMode(child, threshold)
 ''',

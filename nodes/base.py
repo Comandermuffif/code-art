@@ -141,7 +141,10 @@ def _values_code(node_def: NodeDef) -> str:
 def add_node(graph, node_def: NodeDef, pos=(0, 0)):
     """Instantiate a NodeDef into a NodeGraph (code + GUI + preview widgets)."""
     node = graph.create_node(node_def.title, pos=pos, use_command=False)
-    node.set_code(node_def.code)
+    # Annotations like `-> ColorMode` name types the executor namespace doesn't
+    # define; the future import keeps them unevaluated while letting the
+    # PyFlowGraph AST parser read them as real pin types (not "any").
+    node.set_code("from __future__ import annotations\n\n" + node_def.code)
     node.set_gui_code(_gui_code(node_def))
     node.set_gui_get_values_code(_values_code(node_def))
     return node

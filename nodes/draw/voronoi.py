@@ -57,7 +57,7 @@ def draw_voronoi(
 DRAW_VORONOI = NodeDef(
     title="Draw Voronoi", category="Draw",
     code='''@node_entry
-def voronoi_draw(field: "ColorMode" = None, count: int = 300, width: int = 512, height: int = 512) -> "QImage":
+def voronoi_draw(field: ColorMode = None, count: int = 300, width: int = 512, height: int = 512) -> QImage:
     """@outputs: image"""
     from nodes.draw._render import render_to_qimage
     from nodes.draw.voronoi import draw_voronoi

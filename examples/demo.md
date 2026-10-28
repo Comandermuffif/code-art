@@ -2,13 +2,13 @@
 
 A generative-art flow ending in an image saved to disk.
 
-## Node: Linear Gradient (ID: f4cedaa3-facd-4f6a-aa5e-a2432efd2a6a)
+## Node: Linear Gradient (ID: 15b8a312-abb4-4040-bfbf-2ccf8131a587)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "f4cedaa3-facd-4f6a-aa5e-a2432efd2a6a",
+  "uuid": "15b8a312-abb4-4040-bfbf-2ccf8131a587",
   "title": "Linear Gradient",
   "pos": [
     -750.0,
@@ -29,8 +29,10 @@ A generative-art flow ending in an image saved to disk.
 ### Logic
 
 ```python
+from __future__ import annotations
+
 @node_entry
-def linear_gradient() -> "ColorMode":
+def linear_gradient() -> ColorMode:
     from nodes.color.linear_gradient import LinearGradientColorMode
     return LinearGradientColorMode()
 
@@ -51,20 +53,20 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Invert (ID: f7e19f90-9f8f-463c-bf61-2ec7fc287e4f)
+## Node: Invert (ID: ba9f8e1f-0772-4a38-9747-bbdd4934d5ec)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "f7e19f90-9f8f-463c-bf61-2ec7fc287e4f",
+  "uuid": "ba9f8e1f-0772-4a38-9747-bbdd4934d5ec",
   "title": "Invert",
   "pos": [
     -500.0,
     -150.0
   ],
   "size": [
-    250,
+    281.15625,
     150
   ],
   "colors": {
@@ -78,8 +80,10 @@ def set_initial_state(widgets, state):
 ### Logic
 
 ```python
+from __future__ import annotations
+
 @node_entry
-def invert(child: "ColorMode" = None) -> "ColorMode":
+def invert(child: ColorMode = None) -> ColorMode:
     from nodes.modify.invert import InvertColorMode
     return InvertColorMode(child)
 
@@ -100,13 +104,13 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Draw Circles (ID: 7ccbd926-0c1e-4b93-ac30-8583d0e2d63c)
+## Node: Draw Circles (ID: c1c2fd7b-d76e-483a-9098-2df704862a67)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "7ccbd926-0c1e-4b93-ac30-8583d0e2d63c",
+  "uuid": "c1c2fd7b-d76e-483a-9098-2df704862a67",
   "title": "Draw Circles",
   "pos": [
     -250.0,
@@ -133,8 +137,10 @@ def set_initial_state(widgets, state):
 ### Logic
 
 ```python
+from __future__ import annotations
+
 @node_entry
-def circles(field: "ColorMode" = None, count: int = 300, min_size: float = 2, max_size: float = 20, width: int = 512, height: int = 512) -> "QImage":
+def circles(field: ColorMode = None, count: int = 300, min_size: float = 2, max_size: float = 20, width: int = 512, height: int = 512) -> QImage:
     """@outputs: image"""
     from nodes.draw._render import render_to_qimage
     from nodes.draw.circles import draw_circles
@@ -201,13 +207,13 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Save Image (ID: 02e2c651-eb72-48d5-a3d5-001cc8d25b37)
+## Node: Save Image (ID: 03d54455-9560-42d6-945d-1869ddb4f6c7)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "02e2c651-eb72-48d5-a3d5-001cc8d25b37",
+  "uuid": "03d54455-9560-42d6-945d-1869ddb4f6c7",
   "title": "Save Image",
   "pos": [
     0.0,
@@ -230,8 +236,10 @@ def set_initial_state(widgets, state):
 ### Logic
 
 ```python
+from __future__ import annotations
+
 @node_entry
-def save_image(image: "QImage" = None, path: str = "output.png") -> "str":
+def save_image(image: QImage = None, path: str = "output.png") -> str:
     """@outputs: saved_path"""
     import os
     if image is None:
@@ -284,51 +292,51 @@ def set_initial_state(widgets, state):
 ```json
 [
   {
-    "start_node_uuid": "f4cedaa3-facd-4f6a-aa5e-a2432efd2a6a",
-    "start_pin_uuid": "37fa527f-4d9a-4211-92bb-8d36b3039ab8",
+    "start_node_uuid": "15b8a312-abb4-4040-bfbf-2ccf8131a587",
+    "start_pin_uuid": "710574eb-2a5e-4ffd-830c-24b7fb490487",
     "start_pin_name": "output_1",
-    "end_node_uuid": "f7e19f90-9f8f-463c-bf61-2ec7fc287e4f",
-    "end_pin_uuid": "ff402c26-fddd-4d71-892f-e5609f045ace",
+    "end_node_uuid": "ba9f8e1f-0772-4a38-9747-bbdd4934d5ec",
+    "end_pin_uuid": "949cddd3-7ee4-4d97-964f-1a97548fb4de",
     "end_pin_name": "child"
   },
   {
-    "start_node_uuid": "f4cedaa3-facd-4f6a-aa5e-a2432efd2a6a",
-    "start_pin_uuid": "459a998c-ef54-4b63-a30d-6e1b5dab066f",
+    "start_node_uuid": "15b8a312-abb4-4040-bfbf-2ccf8131a587",
+    "start_pin_uuid": "20974bb1-b8ce-485c-a6c3-22459d378b4a",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "f7e19f90-9f8f-463c-bf61-2ec7fc287e4f",
-    "end_pin_uuid": "35059716-3234-4cf1-97b3-6f0be225eb4e",
+    "end_node_uuid": "ba9f8e1f-0772-4a38-9747-bbdd4934d5ec",
+    "end_pin_uuid": "457d7c40-daf8-4c54-a1b6-08c593f040ef",
     "end_pin_name": "exec_in"
   },
   {
-    "start_node_uuid": "f7e19f90-9f8f-463c-bf61-2ec7fc287e4f",
-    "start_pin_uuid": "79bd2780-953e-424d-a53d-a2f563fb36cb",
+    "start_node_uuid": "ba9f8e1f-0772-4a38-9747-bbdd4934d5ec",
+    "start_pin_uuid": "4200a706-c6c4-4886-96bd-c3e90dd4d649",
     "start_pin_name": "output_1",
-    "end_node_uuid": "7ccbd926-0c1e-4b93-ac30-8583d0e2d63c",
-    "end_pin_uuid": "4dcf79cb-94a7-483d-a7b2-0ebc620e93f9",
+    "end_node_uuid": "c1c2fd7b-d76e-483a-9098-2df704862a67",
+    "end_pin_uuid": "c3ae009e-64c5-4b23-9c6c-d8f3c701fe14",
     "end_pin_name": "field"
   },
   {
-    "start_node_uuid": "f7e19f90-9f8f-463c-bf61-2ec7fc287e4f",
-    "start_pin_uuid": "c710f3bd-48e7-4c02-90b3-86c49a2d4dc3",
+    "start_node_uuid": "ba9f8e1f-0772-4a38-9747-bbdd4934d5ec",
+    "start_pin_uuid": "8cef0fd0-232c-49d1-96da-4c40aa5335b8",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "7ccbd926-0c1e-4b93-ac30-8583d0e2d63c",
-    "end_pin_uuid": "b7ea652d-f606-4383-a2bb-fff475377a0f",
+    "end_node_uuid": "c1c2fd7b-d76e-483a-9098-2df704862a67",
+    "end_pin_uuid": "d357f9c1-6ab5-4b6a-b067-2811b1cdb847",
     "end_pin_name": "exec_in"
   },
   {
-    "start_node_uuid": "7ccbd926-0c1e-4b93-ac30-8583d0e2d63c",
-    "start_pin_uuid": "9d1270d9-88d8-4afb-ba9a-933cd7689cfb",
+    "start_node_uuid": "c1c2fd7b-d76e-483a-9098-2df704862a67",
+    "start_pin_uuid": "44b75e90-e0e5-44c1-abc5-cf862606c2a2",
     "start_pin_name": "image",
-    "end_node_uuid": "02e2c651-eb72-48d5-a3d5-001cc8d25b37",
-    "end_pin_uuid": "3aa5ccac-9543-49b8-a6aa-8deb65a8be18",
+    "end_node_uuid": "03d54455-9560-42d6-945d-1869ddb4f6c7",
+    "end_pin_uuid": "be16bca5-99a3-4f5f-89a0-5a7ecf1692c5",
     "end_pin_name": "image"
   },
   {
-    "start_node_uuid": "7ccbd926-0c1e-4b93-ac30-8583d0e2d63c",
-    "start_pin_uuid": "e3840d33-1c9d-46bc-8e58-0b65f3a5331e",
+    "start_node_uuid": "c1c2fd7b-d76e-483a-9098-2df704862a67",
+    "start_pin_uuid": "15c9d10a-e543-4ceb-a5f3-1e1757012c1a",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "02e2c651-eb72-48d5-a3d5-001cc8d25b37",
-    "end_pin_uuid": "1a9547a8-0b87-4045-8041-a0d05b43d1d4",
+    "end_node_uuid": "03d54455-9560-42d6-945d-1869ddb4f6c7",
+    "end_pin_uuid": "cfd59bf4-e7b4-4cab-981e-4af97b14cfe0",
     "end_pin_name": "exec_in"
   }
 ]

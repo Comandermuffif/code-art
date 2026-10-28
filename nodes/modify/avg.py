@@ -23,7 +23,7 @@ class AvgColorMode(ColorMode):
 AVG = NodeDef(
     title="Average", category="Color Modifier",
     code='''@node_entry
-def avg(a: "ColorMode" = None, b: "ColorMode" = None) -> "ColorMode":
+def avg(a: ColorMode = None, b: ColorMode = None) -> ColorMode:
     from nodes.modify.avg import AvgColorMode
     return AvgColorMode(a, b)
 ''',

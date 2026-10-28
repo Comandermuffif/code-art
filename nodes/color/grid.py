@@ -21,7 +21,7 @@ class GridColorMode(ColorMode):
 GRID = NodeDef(
     title="Grid", category="Color",
     code='''@node_entry
-def grid(colors: str = "#ff0000,#00ff00,#0000ff,#ffff00") -> "ColorMode":
+def grid(colors: str = "#ff0000,#00ff00,#0000ff,#ffff00") -> ColorMode:
     from models import FloatColor
     from nodes.color.grid import GridColorMode
     return GridColorMode(FloatColor.fromHexList(colors))

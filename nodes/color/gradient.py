@@ -30,7 +30,7 @@ class GradientColorMode(ColorMode):
 GRADIENT = NodeDef(
     title="Gradient", category="Color",
     code='''@node_entry
-def gradient(colors: str = "#ff0000,#00ff00,#0000ff,#ff0000", orientation: int = 0) -> "ColorMode":
+def gradient(colors: str = "#ff0000,#00ff00,#0000ff,#ff0000", orientation: int = 0) -> ColorMode:
     from models import FloatColor
     from nodes.color.gradient import GradientColorMode
     return GradientColorMode(FloatColor.fromHexList(colors), orientation)

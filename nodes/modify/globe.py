@@ -27,7 +27,7 @@ class GlobeColorMode(ColorMode):
 GLOBE = NodeDef(
     title="Globe", category="Color Modifier",
     code='''@node_entry
-def globe(child: "ColorMode" = None, x: float = 0.5, y: float = 0.5, radious: float = 0.4) -> "ColorMode":
+def globe(child: ColorMode = None, x: float = 0.5, y: float = 0.5, radious: float = 0.4) -> ColorMode:
     from nodes.modify.globe import GlobeColorMode
     return GlobeColorMode(child, x, y, radious)
 ''',

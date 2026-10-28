@@ -14,7 +14,7 @@ class LinearGradientColorMode(ColorMode):
 LINEAR_GRADIENT = NodeDef(
     title="Linear Gradient", category="Color",
     code='''@node_entry
-def linear_gradient() -> "ColorMode":
+def linear_gradient() -> ColorMode:
     from nodes.color.linear_gradient import LinearGradientColorMode
     return LinearGradientColorMode()
 ''',
