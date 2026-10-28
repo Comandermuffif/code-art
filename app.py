@@ -10,6 +10,7 @@ preview. Graphs save/load as human-readable Markdown (.md).
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -179,6 +180,7 @@ class CodeArtWindow(QMainWindow):
             self.on_save_as()
 
     def on_save_as(self):
+        activate_window(self)  # ensure the parent is active so the dialog gets focus
         path, _ = QFileDialog.getSaveFileName(self, "Save Graph", "", "Markdown (*.md)")
         if not path:
             return
@@ -188,6 +190,7 @@ class CodeArtWindow(QMainWindow):
         self.on_save()
 
     def on_load(self):
+        activate_window(self)  # ensure the parent is active so the dialog gets focus
         path, _ = QFileDialog.getOpenFileName(self, "Load Graph", "", "Markdown (*.md)")
         if not path:
             return
@@ -205,10 +208,35 @@ class CodeArtWindow(QMainWindow):
         self.output_log.append(f"Loaded: {path}")
 
 
+def activate_window(window) -> None:
+    """Make ``window`` the frontmost, keyboard-focused window.
+
+    When the app is launched from a terminal (or otherwise in the
+    background), macOS does not make it the active application, so the main
+    window can come up unfocused — and modal dialogs like the file selector
+    then open without accepting keyboard/mouse interaction. raise() +
+    activateWindow() is enough on most platforms; on macOS we additionally
+    ask System Events to front the process, since activateWindow() alone is
+    not reliable for a freshly launched background process.
+    """
+    window.raise_()
+    window.activateWindow()
+    if sys.platform == "darwin":
+        try:
+            subprocess.Popen(
+                ["osascript", "-e",
+                 'tell application "System Events" to set frontmost of '
+                 f'(first process whose unix id is {os.getpid()}) to true'],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except OSError:
+            pass  # best-effort; the raise/activate above still ran
+
+
 def main():
     app = QApplication(sys.argv)
     window = CodeArtWindow()
     window.show()
+    activate_window(window)
     sys.exit(app.exec())
 
 
