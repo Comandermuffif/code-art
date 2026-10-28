@@ -2,7 +2,8 @@
 
 Run with:  python make_example.py
 
-Demonstrates one flow: a color mode through a modifier into a draw mode,
+Demonstrates one flow: a hex palette parsed into a color list, expanded with
+Get Subcolors, fed through a color mode and modifier into a draw mode, and
 ending in a Save Image node that writes the result to disk.
 """
 from __future__ import annotations
@@ -21,15 +22,20 @@ from data.flow_format import save_flow_file
 import nodes as N
 
 
+def _pin(node, name, direction):
+    pins = node.output_pins if direction == "output" else node.input_pins
+    return next(p for p in pins if p.name == name)
+
+
 def wire(graph, source, source_out, target, target_in):
     graph.create_connection(
-        source.get_pin_by_name(source_out),
-        target.get_pin_by_name(target_in),
+        _pin(source, source_out, "output"),
+        _pin(target, target_in, "input"),
         use_command=False,
     )
     graph.create_connection(
-        source.get_pin_by_name("exec_out"),
-        target.get_pin_by_name("exec_in"),
+        _pin(source, "exec_out", "output"),
+        _pin(target, "exec_in", "input"),
         use_command=False,
     )
 
@@ -38,13 +44,17 @@ def main():
     app = QApplication(sys.argv)
     graph = NodeGraph()
 
-    # Single flow: Linear Gradient -> Invert -> Circles -> Save Image.
-    lin = N.add_node(graph, N.LINEAR_GRADIENT, pos=(-750, -150))
-    inv = N.add_node(graph, N.INVERT, pos=(-500, -150))
-    circ = N.add_node(graph, N.DRAW_CIRCLES, pos=(-250, -150))
-    save = N.add_node(graph, N.SAVE_IMAGE, pos=(0, -150))
+    # Single flow: Palette -> Get Subcolors -> Gradient -> Invert -> Circles -> Save Image.
+    pal = N.add_node(graph, N.PALETTE, pos=(-1000, -150))
+    sub = N.add_node(graph, N.GET_SUBCOLORS, pos=(-750, -150))
+    grad = N.add_node(graph, N.GRADIENT, pos=(-500, -150))
+    inv = N.add_node(graph, N.INVERT, pos=(-250, -150))
+    circ = N.add_node(graph, N.DRAW_CIRCLES, pos=(0, -150))
+    save = N.add_node(graph, N.SAVE_IMAGE, pos=(250, -150))
     save.gui_widgets["path"].setText("generated/demo.png")
-    wire(graph, lin, "output_1", inv, "child")
+    wire(graph, pal, "colors", sub, "colors")
+    wire(graph, sub, "colors", grad, "colors")
+    wire(graph, grad, "output_1", inv, "child")
     wire(graph, inv, "output_1", circ, "field")
     wire(graph, circ, "image", save, "image")
 

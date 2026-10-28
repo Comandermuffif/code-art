@@ -1,7 +1,7 @@
 """Random color mode: a random palette color per sample."""
 import random
 
-from nodes.base import ColorMode, NodeDef, Widget
+from nodes.base import ColorMode, NodeDef
 
 from models import FloatColor
 
@@ -17,10 +17,10 @@ class RandomColorMode(ColorMode):
 RANDOM = NodeDef(
     title="Random", category="Color",
     code='''@node_entry
-def random(colors: str = "#ff0000,#00ff00,#0000ff") -> ColorMode:
-    from models import FloatColor
+def random(colors: list[FloatColor] = None) -> ColorMode:
     from nodes.color.random import RandomColorMode
-    return RandomColorMode(FloatColor.fromHexList(colors))
+    if colors is None:
+        raise ValueError("Random: no color palette connected")
+    return RandomColorMode(colors)
 ''',
-    widgets=[Widget("colors", "text", "#ff0000,#00ff00,#0000ff")],
 )

@@ -47,7 +47,7 @@ class NodeDef:
 
 
 # Menu ordering for node categories (unknown categories sort last).
-CATEGORY_ORDER: list[str] = ["Color", "Color Modifier", "Draw", "Output"]
+CATEGORY_ORDER: list[str] = ["Color", "Palette", "Color Modifier", "Draw", "Output"]
 
 
 # --- Code generation ---------------------------------------------------------
@@ -58,6 +58,9 @@ def _gui_code(node_def: NodeDef) -> str:
         name = w.param
         if w.kind == "text":
             lines.append(f"widgets[{name!r}] = QtWidgets.QLineEdit({w.default!r})")
+        elif w.kind == "bool":
+            lines.append(f"widgets[{name!r}] = QtWidgets.QCheckBox({name!r})")
+            lines.append(f"widgets[{name!r}].setChecked({bool(w.default)})")
         elif w.kind == "file":
             lines.append(f"widgets[{name!r}] = QtWidgets.QLineEdit({w.default!r})")
             lines.append(f"_row_{name} = QtWidgets.QHBoxLayout()")
@@ -98,6 +101,8 @@ def _gui_code(node_def: NodeDef) -> str:
 def _getter_expr(w: Widget) -> str:
     if w.kind in ("text", "file"):
         return f"widgets[{w.param!r}].text()"
+    if w.kind == "bool":
+        return f"widgets[{w.param!r}].isChecked()"
     return f"widgets[{w.param!r}].value()"
 
 
@@ -128,6 +133,9 @@ def _values_code(node_def: NodeDef) -> str:
         if w.kind in ("text", "file"):
             init_lines.append(
                 f"    if {w.param!r} in state: widgets[{w.param!r}].setText(state[{w.param!r}])")
+        elif w.kind == "bool":
+            init_lines.append(
+                f"    if {w.param!r} in state: widgets[{w.param!r}].setChecked(bool(state[{w.param!r}]))")
         else:
             init_lines.append(
                 f"    if {w.param!r} in state: widgets[{w.param!r}].setValue(state[{w.param!r}])")

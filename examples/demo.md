@@ -2,27 +2,29 @@
 
 A generative-art flow ending in an image saved to disk.
 
-## Node: Linear Gradient (ID: 15b8a312-abb4-4040-bfbf-2ccf8131a587)
+## Node: Palette (ID: c33b6287-987f-421b-a7f8-c2f8fed95ae6)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "15b8a312-abb4-4040-bfbf-2ccf8131a587",
-  "title": "Linear Gradient",
+  "uuid": "c33b6287-987f-421b-a7f8-c2f8fed95ae6",
+  "title": "Palette",
   "pos": [
-    -750.0,
+    -1000.0,
     -150.0
   ],
   "size": [
-    250,
+    272.453125,
     150
   ],
   "colors": {
     "title": "#2a2a2a",
     "body": "#141414"
   },
-  "gui_state": {}
+  "gui_state": {
+    "hex_colors": "#ff0000,#00ff00,#0000ff,#ff0000"
+  }
 }
 ```
 
@@ -32,37 +34,179 @@ A generative-art flow ending in an image saved to disk.
 from __future__ import annotations
 
 @node_entry
-def linear_gradient() -> ColorMode:
-    from nodes.color.linear_gradient import LinearGradientColorMode
-    return LinearGradientColorMode()
+def palette(hex_colors: str = "#ff0000,#00ff00,#0000ff,#ff0000") -> list[FloatColor]:
+    """@outputs: colors"""
+    from models import FloatColor
+    return FloatColor.fromHexList(hex_colors)
 
+```
+
+### GUI Definition
+
+```python
+widgets['hex_colors'] = QtWidgets.QLineEdit('#ff0000,#00ff00,#0000ff,#ff0000')
+layout.addWidget(widgets['hex_colors'])
 ```
 
 ### GUI State Handler
 
 ```python
 def get_values(widgets):
-    return {}
+    return {'hex_colors': widgets['hex_colors'].text()}
 
 def set_values(widgets, outputs):
     pass
 
 def set_initial_state(widgets, state):
-    pass
+    if 'hex_colors' in state: widgets['hex_colors'].setText(state['hex_colors'])
 
 ```
 
 
-## Node: Invert (ID: ba9f8e1f-0772-4a38-9747-bbdd4934d5ec)
+## Node: Get Subcolors (ID: 2a2c5c63-7ff8-45ff-81b3-9e2091ac59a8)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "ba9f8e1f-0772-4a38-9747-bbdd4934d5ec",
-  "title": "Invert",
+  "uuid": "2a2c5c63-7ff8-45ff-81b3-9e2091ac59a8",
+  "title": "Get Subcolors",
+  "pos": [
+    -750.0,
+    -150.0
+  ],
+  "size": [
+    307.0625,
+    192
+  ],
+  "colors": {
+    "title": "#2a2a2a",
+    "body": "#141414"
+  },
+  "gui_state": {
+    "subcount": 4,
+    "wrap": false
+  }
+}
+```
+
+### Logic
+
+```python
+from __future__ import annotations
+
+@node_entry
+def subcolors(colors: list[FloatColor] = None, subcount: int = 4, wrap: bool = False) -> list[FloatColor]:
+    """@outputs: colors"""
+    from models import FloatColor
+    if colors is None:
+        raise ValueError("Get Subcolors: no color palette connected")
+    return FloatColor.getSubcolors(colors, subcount, wrap)
+
+```
+
+### GUI Definition
+
+```python
+widgets['subcount'] = QtWidgets.QSpinBox()
+widgets['subcount'].setRange(0, 64)
+widgets['subcount'].setValue(4)
+layout.addWidget(widgets['subcount'])
+widgets['wrap'] = QtWidgets.QCheckBox('wrap')
+widgets['wrap'].setChecked(False)
+layout.addWidget(widgets['wrap'])
+```
+
+### GUI State Handler
+
+```python
+def get_values(widgets):
+    return {'subcount': widgets['subcount'].value(), 'wrap': widgets['wrap'].isChecked()}
+
+def set_values(widgets, outputs):
+    pass
+
+def set_initial_state(widgets, state):
+    if 'subcount' in state: widgets['subcount'].setValue(state['subcount'])
+    if 'wrap' in state: widgets['wrap'].setChecked(bool(state['wrap']))
+
+```
+
+
+## Node: Gradient (ID: eaa06a39-f015-4864-9c0c-27c24922be6c)
+
+### Metadata
+
+```json
+{
+  "uuid": "eaa06a39-f015-4864-9c0c-27c24922be6c",
+  "title": "Gradient",
   "pos": [
     -500.0,
+    -150.0
+  ],
+  "size": [
+    304.234375,
+    167
+  ],
+  "colors": {
+    "title": "#2a2a2a",
+    "body": "#141414"
+  },
+  "gui_state": {
+    "orientation": 0
+  }
+}
+```
+
+### Logic
+
+```python
+from __future__ import annotations
+
+@node_entry
+def gradient(colors: list[FloatColor] = None, orientation: int = 0) -> ColorMode:
+    from nodes.color.gradient import GradientColorMode
+    if colors is None:
+        raise ValueError("Gradient: no color palette connected")
+    return GradientColorMode(colors, orientation)
+
+```
+
+### GUI Definition
+
+```python
+widgets['orientation'] = QtWidgets.QSpinBox()
+widgets['orientation'].setRange(0, 2)
+widgets['orientation'].setValue(0)
+layout.addWidget(widgets['orientation'])
+```
+
+### GUI State Handler
+
+```python
+def get_values(widgets):
+    return {'orientation': widgets['orientation'].value()}
+
+def set_values(widgets, outputs):
+    pass
+
+def set_initial_state(widgets, state):
+    if 'orientation' in state: widgets['orientation'].setValue(state['orientation'])
+
+```
+
+
+## Node: Invert (ID: 88821422-8c3a-4ad3-bacb-ad2850eb9e5e)
+
+### Metadata
+
+```json
+{
+  "uuid": "88821422-8c3a-4ad3-bacb-ad2850eb9e5e",
+  "title": "Invert",
+  "pos": [
+    -250.0,
     -150.0
   ],
   "size": [
@@ -104,16 +248,16 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Draw Circles (ID: c1c2fd7b-d76e-483a-9098-2df704862a67)
+## Node: Draw Circles (ID: 9c394a7a-da35-4ce3-883b-e0af1c27cca3)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "c1c2fd7b-d76e-483a-9098-2df704862a67",
+  "uuid": "9c394a7a-da35-4ce3-883b-e0af1c27cca3",
   "title": "Draw Circles",
   "pos": [
-    -250.0,
+    0.0,
     -150.0
   ],
   "size": [
@@ -207,16 +351,16 @@ def set_initial_state(widgets, state):
 ```
 
 
-## Node: Save Image (ID: 03d54455-9560-42d6-945d-1869ddb4f6c7)
+## Node: Save Image (ID: d8c0c2c8-38dc-47b9-b84b-150b9e35765a)
 
 ### Metadata
 
 ```json
 {
-  "uuid": "03d54455-9560-42d6-945d-1869ddb4f6c7",
+  "uuid": "d8c0c2c8-38dc-47b9-b84b-150b9e35765a",
   "title": "Save Image",
   "pos": [
-    0.0,
+    250.0,
     -150.0
   ],
   "size": [
@@ -292,51 +436,83 @@ def set_initial_state(widgets, state):
 ```json
 [
   {
-    "start_node_uuid": "15b8a312-abb4-4040-bfbf-2ccf8131a587",
-    "start_pin_uuid": "710574eb-2a5e-4ffd-830c-24b7fb490487",
+    "start_node_uuid": "c33b6287-987f-421b-a7f8-c2f8fed95ae6",
+    "start_pin_uuid": "bf2def4c-cd7a-4c54-8ae5-a474c122a461",
+    "start_pin_name": "colors",
+    "end_node_uuid": "2a2c5c63-7ff8-45ff-81b3-9e2091ac59a8",
+    "end_pin_uuid": "65462b79-e9ca-4a8a-9ea8-c7f8f41d6557",
+    "end_pin_name": "colors"
+  },
+  {
+    "start_node_uuid": "c33b6287-987f-421b-a7f8-c2f8fed95ae6",
+    "start_pin_uuid": "03cd4ebf-d16a-40af-85c9-2e27a491562d",
+    "start_pin_name": "exec_out",
+    "end_node_uuid": "2a2c5c63-7ff8-45ff-81b3-9e2091ac59a8",
+    "end_pin_uuid": "5cda24bb-ef71-42f5-b427-f89936dc24a3",
+    "end_pin_name": "exec_in"
+  },
+  {
+    "start_node_uuid": "2a2c5c63-7ff8-45ff-81b3-9e2091ac59a8",
+    "start_pin_uuid": "a3d9290c-2c81-49a8-9e82-0da64f4b5e5e",
+    "start_pin_name": "colors",
+    "end_node_uuid": "eaa06a39-f015-4864-9c0c-27c24922be6c",
+    "end_pin_uuid": "63d1c54f-13da-43ae-93a5-6baee025b911",
+    "end_pin_name": "colors"
+  },
+  {
+    "start_node_uuid": "2a2c5c63-7ff8-45ff-81b3-9e2091ac59a8",
+    "start_pin_uuid": "e7153f5c-e5a5-4ee4-a7c9-98f27582c681",
+    "start_pin_name": "exec_out",
+    "end_node_uuid": "eaa06a39-f015-4864-9c0c-27c24922be6c",
+    "end_pin_uuid": "be98b66e-b4a7-47b7-adb2-28542b757f60",
+    "end_pin_name": "exec_in"
+  },
+  {
+    "start_node_uuid": "eaa06a39-f015-4864-9c0c-27c24922be6c",
+    "start_pin_uuid": "1d5158e1-08a1-4056-a915-c5696522f997",
     "start_pin_name": "output_1",
-    "end_node_uuid": "ba9f8e1f-0772-4a38-9747-bbdd4934d5ec",
-    "end_pin_uuid": "949cddd3-7ee4-4d97-964f-1a97548fb4de",
+    "end_node_uuid": "88821422-8c3a-4ad3-bacb-ad2850eb9e5e",
+    "end_pin_uuid": "58375c9e-e258-415c-bd7b-47aecca7f1e1",
     "end_pin_name": "child"
   },
   {
-    "start_node_uuid": "15b8a312-abb4-4040-bfbf-2ccf8131a587",
-    "start_pin_uuid": "20974bb1-b8ce-485c-a6c3-22459d378b4a",
+    "start_node_uuid": "eaa06a39-f015-4864-9c0c-27c24922be6c",
+    "start_pin_uuid": "d5e4f2df-77e4-4ba9-8b3a-a6f999d4d8e9",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "ba9f8e1f-0772-4a38-9747-bbdd4934d5ec",
-    "end_pin_uuid": "457d7c40-daf8-4c54-a1b6-08c593f040ef",
+    "end_node_uuid": "88821422-8c3a-4ad3-bacb-ad2850eb9e5e",
+    "end_pin_uuid": "72985a0f-cebc-46c1-809e-565df3ac6a66",
     "end_pin_name": "exec_in"
   },
   {
-    "start_node_uuid": "ba9f8e1f-0772-4a38-9747-bbdd4934d5ec",
-    "start_pin_uuid": "4200a706-c6c4-4886-96bd-c3e90dd4d649",
+    "start_node_uuid": "88821422-8c3a-4ad3-bacb-ad2850eb9e5e",
+    "start_pin_uuid": "3d0e28ef-b185-4cbd-9deb-e1f879c6fdcc",
     "start_pin_name": "output_1",
-    "end_node_uuid": "c1c2fd7b-d76e-483a-9098-2df704862a67",
-    "end_pin_uuid": "c3ae009e-64c5-4b23-9c6c-d8f3c701fe14",
+    "end_node_uuid": "9c394a7a-da35-4ce3-883b-e0af1c27cca3",
+    "end_pin_uuid": "5b36d665-d5d9-4815-9610-9ae332786a79",
     "end_pin_name": "field"
   },
   {
-    "start_node_uuid": "ba9f8e1f-0772-4a38-9747-bbdd4934d5ec",
-    "start_pin_uuid": "8cef0fd0-232c-49d1-96da-4c40aa5335b8",
+    "start_node_uuid": "88821422-8c3a-4ad3-bacb-ad2850eb9e5e",
+    "start_pin_uuid": "2644a012-812c-4441-bfd1-a956ffd1a1fe",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "c1c2fd7b-d76e-483a-9098-2df704862a67",
-    "end_pin_uuid": "d357f9c1-6ab5-4b6a-b067-2811b1cdb847",
+    "end_node_uuid": "9c394a7a-da35-4ce3-883b-e0af1c27cca3",
+    "end_pin_uuid": "e9d47956-623c-4e82-a379-47f630ed3bf3",
     "end_pin_name": "exec_in"
   },
   {
-    "start_node_uuid": "c1c2fd7b-d76e-483a-9098-2df704862a67",
-    "start_pin_uuid": "44b75e90-e0e5-44c1-abc5-cf862606c2a2",
+    "start_node_uuid": "9c394a7a-da35-4ce3-883b-e0af1c27cca3",
+    "start_pin_uuid": "bad87cdf-5fff-4374-bad1-00349cd844ca",
     "start_pin_name": "image",
-    "end_node_uuid": "03d54455-9560-42d6-945d-1869ddb4f6c7",
-    "end_pin_uuid": "be16bca5-99a3-4f5f-89a0-5a7ecf1692c5",
+    "end_node_uuid": "d8c0c2c8-38dc-47b9-b84b-150b9e35765a",
+    "end_pin_uuid": "3deb34fc-7cfe-488c-a302-78104d7dd4e6",
     "end_pin_name": "image"
   },
   {
-    "start_node_uuid": "c1c2fd7b-d76e-483a-9098-2df704862a67",
-    "start_pin_uuid": "15c9d10a-e543-4ceb-a5f3-1e1757012c1a",
+    "start_node_uuid": "9c394a7a-da35-4ce3-883b-e0af1c27cca3",
+    "start_pin_uuid": "27422407-9c1d-4faa-af36-f6114600ddcd",
     "start_pin_name": "exec_out",
-    "end_node_uuid": "03d54455-9560-42d6-945d-1869ddb4f6c7",
-    "end_pin_uuid": "cfd59bf4-e7b4-4cab-981e-4af97b14cfe0",
+    "end_node_uuid": "d8c0c2c8-38dc-47b9-b84b-150b9e35765a",
+    "end_pin_uuid": "f6087077-95e7-42d4-b3b2-3b295fefc15c",
     "end_pin_name": "exec_in"
   }
 ]

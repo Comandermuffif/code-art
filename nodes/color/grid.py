@@ -1,7 +1,7 @@
 """Grid color mode: a palette laid out as a color grid."""
 import math
 
-from nodes.base import ColorMode, NodeDef, Widget
+from nodes.base import ColorMode, NodeDef
 
 from models import FloatColor
 
@@ -21,10 +21,10 @@ class GridColorMode(ColorMode):
 GRID = NodeDef(
     title="Grid", category="Color",
     code='''@node_entry
-def grid(colors: str = "#ff0000,#00ff00,#0000ff,#ffff00") -> ColorMode:
-    from models import FloatColor
+def grid(colors: list[FloatColor] = None) -> ColorMode:
     from nodes.color.grid import GridColorMode
-    return GridColorMode(FloatColor.fromHexList(colors))
+    if colors is None:
+        raise ValueError("Grid: no color palette connected")
+    return GridColorMode(colors)
 ''',
-    widgets=[Widget("colors", "text", "#ff0000,#00ff00,#0000ff,#ffff00")],
 )

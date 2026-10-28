@@ -30,13 +30,11 @@ class GradientColorMode(ColorMode):
 GRADIENT = NodeDef(
     title="Gradient", category="Color",
     code='''@node_entry
-def gradient(colors: str = "#ff0000,#00ff00,#0000ff,#ff0000", orientation: int = 0) -> ColorMode:
-    from models import FloatColor
+def gradient(colors: list[FloatColor] = None, orientation: int = 0) -> ColorMode:
     from nodes.color.gradient import GradientColorMode
-    return GradientColorMode(FloatColor.fromHexList(colors), orientation)
+    if colors is None:
+        raise ValueError("Gradient: no color palette connected")
+    return GradientColorMode(colors, orientation)
 ''',
-    widgets=[
-        Widget("colors", "text", "#ff0000,#00ff00,#0000ff,#ff0000"),
-        Widget("orientation", "int", 0, 0, 2),
-    ],
+    widgets=[Widget("orientation", "int", 0, 0, 2)],
 )

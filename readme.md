@@ -49,8 +49,12 @@ python app.py
 ## Nodes
 
 - **Color** sources: Gradient, Grid, Random, Arc, Linear Gradient. Each builds a
-  real `ColorMode` object and passes it downstream by reference. Enter a
-  palette as comma-separated hex (e.g. `#ff0000,#00ff00,#0000ff`).
+  real `ColorMode` object and passes it downstream by reference. The palettized
+  ones (Gradient, Grid, Random, Arc) take a `colors` list as an input pin.
+- **Palette**: Palette (parses a comma-separated hex string like
+  `#ff0000,#00ff00,#0000ff` into a list of colors), Subset (slice the list),
+  Get Subcolors (interpolate shades between palette colors). Chain these to
+  modify a color list before it reaches a color mode.
 - **Color Modifier**: Clamp, Invert, Transform, Globe, Normal, Voronoi, Average.
   These wrap a child color mode.
 - **Draw**: Circles, Squares, Triangles, Hexagon, Pattern, Voronoi. Each samples
@@ -67,6 +71,8 @@ python app.py
     and the `add_node` helper.
   - `nodes/color/` — color-source nodes (implementation + node definition in
     each file).
+  - `nodes/palette/` — color-list nodes (parse hex strings, slice and
+    interpolate color lists).
   - `nodes/modify/` — color-modifier nodes.
   - `nodes/draw/` — draw-mode nodes (QPainter ports of the old cairo draw
     modes) with `_render.py` holding the shared rendering helpers.
