@@ -155,4 +155,13 @@ def add_node(graph, node_def: NodeDef, pos=(0, 0)):
     node.set_code("from __future__ import annotations\n\n" + node_def.code)
     node.set_gui_code(_gui_code(node_def))
     node.set_gui_get_values_code(_values_code(node_def))
+    # The GUI widgets are created inside a host that is embedded in the scene
+    # via a QGraphicsProxyWidget. When the host is already visible (e.g. a node
+    # added after a graph was loaded), Qt never sends the new widgets a Show
+    # event, so the host layout reports a (0, 0) minimum and the node is sized
+    # too small to display its fields. Show them and re-fit explicitly.
+    for widget in node.gui_widgets.values():
+        widget.show()
+    node.custom_widget_layout.activate()
+    node.fit_size_to_content()
     return node
