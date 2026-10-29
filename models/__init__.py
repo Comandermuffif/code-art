@@ -23,6 +23,11 @@ class FloatColor():
     def __repr__(self) -> str:
         return self.toHex()
 
+    def __eq__(self, other:FloatColor) -> bool:
+        if type(other) != FloatColor:
+            return False
+        return self.r == other.r and self.g == other.g and self.b == other.b and self.a == other.a
+
     def __add__(self, other:FloatColor):
         return FloatColor(
             self.r + other.r,
