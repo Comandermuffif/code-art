@@ -8,7 +8,7 @@ RANDOM = NodeDef(
     code='''@node_entry
 def random(min:float, max:float) -> Tuple[float, int]:
     """@outputs: value, value"""
-    from math import random
+    from random import random
     value = random() * (max - min) + min
     return value, int(value)
 ''',
