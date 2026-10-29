@@ -196,14 +196,13 @@ class CodeArtWindow(QMainWindow):
             return
         self.graph.clear_graph()
         self.graph.deserialize(load_flow_file(path))
-        # Deserialized nodes' GUI widgets can end up hidden inside the proxy
-        # widget host (Qt never sends them a Show event), which collapses the
-        # node layout; show them and re-fit so draw nodes show their fields.
+        # Deserialized nodes need the same GUI fix-up as freshly added ones:
+        # show hidden widgets (Qt never sends them a Show event inside the
+        # proxy host) and force the Fusion style so input fields scale with
+        # the view zoom instead of being painted at a fixed screen size.
         for node in self.graph.nodes:
-            for widget in getattr(node, "gui_widgets", {}).values():
-                widget.show()
-            node.custom_widget_layout.activate()
-            node.fit_size_to_content()
+            if getattr(node, "gui_widgets", None) is not None:
+                N.finalize_node_gui(node)
         self.current_file = path
         self.output_log.append(f"Loaded: {path}")
 

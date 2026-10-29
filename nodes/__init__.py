@@ -20,6 +20,7 @@ from .base import (
     _gui_code,
     _values_code,
     add_node,
+    finalize_node_gui,
 )
 
 __all__ = [
@@ -28,6 +29,7 @@ __all__ = [
     "NODE_DEFS",
     "Widget",
     "add_node",
+    "finalize_node_gui",
     "node_defs_by_category",
     "CATEGORY_ORDER",
     "_gui_code",

@@ -146,6 +146,45 @@ def _values_code(node_def: NodeDef) -> str:
     return get_body + "\n" + set_body + "\n" + init_body
 
 
+def finalize_node_gui(node) -> None:
+    """Fix up a node's custom-widget GUI after it has been built.
+
+    Two things PyFlowGraph's ``rebuild_gui`` doesn't handle for us:
+
+    1. *Visibility/sizing.* The widgets live in a host embedded in the scene
+       via a QGraphicsProxyWidget. When that host chain is already visible
+       (a node added after a graph was loaded, or any deserialized node),
+       Qt never sends the new widgets a Show event, the host layout reports a
+       (0, 0) minimum, and the node collapses so its fields are clipped away.
+       Show them explicitly and re-fit.
+
+    2. *Styling.* On macOS the native widget style paints input fields via
+       AppKit at fixed screen coordinates, so inside the proxy widget the
+       white of an input box does not scale when the view zooms (and can
+       render illegibly). Force Fusion — fully Qt-painted, scales with the
+       scene transform like the rest of the node — and an explicit readable
+       font, both set on the host so they propagate to every child widget.
+    """
+    host = node.custom_widget_host
+    from PySide6.QtWidgets import QStyleFactory
+    from PySide6.QtGui import QFont
+    # setStyle takes ownership of the style object, so create a fresh one per
+    # widget rather than sharing an instance.
+    font = QFont("Arial", 10)
+    # Set on the host and every widget explicitly: a child inherits its
+    # parent's style only while it hasn't got one of its own, so relying on
+    # propagation alone is fragile.
+    host.setStyle(QStyleFactory.create("Fusion"))
+    host.setFont(font)
+    for widget in node.gui_widgets.values():
+        widget.setStyle(QStyleFactory.create("Fusion"))
+        widget.setFont(font)
+    for widget in node.gui_widgets.values():
+        widget.show()
+    node.custom_widget_layout.activate()
+    node.fit_size_to_content()
+
+
 def add_node(graph, node_def: NodeDef, pos=(0, 0)):
     """Instantiate a NodeDef into a NodeGraph (code + GUI + preview widgets)."""
     node = graph.create_node(node_def.title, pos=pos, use_command=False)
@@ -155,13 +194,5 @@ def add_node(graph, node_def: NodeDef, pos=(0, 0)):
     node.set_code("from __future__ import annotations\n\n" + node_def.code)
     node.set_gui_code(_gui_code(node_def))
     node.set_gui_get_values_code(_values_code(node_def))
-    # The GUI widgets are created inside a host that is embedded in the scene
-    # via a QGraphicsProxyWidget. When the host is already visible (e.g. a node
-    # added after a graph was loaded), Qt never sends the new widgets a Show
-    # event, so the host layout reports a (0, 0) minimum and the node is sized
-    # too small to display its fields. Show them and re-fit explicitly.
-    for widget in node.gui_widgets.values():
-        widget.show()
-    node.custom_widget_layout.activate()
-    node.fit_size_to_content()
+    finalize_node_gui(node)
     return node
