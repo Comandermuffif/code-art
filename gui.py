@@ -1,7 +1,7 @@
 """Draw
 
 Usage:
-  draw_ui.py [options]
+  gui.py [options]
 
 Options:
   -h --help                   Show this screen
@@ -14,11 +14,9 @@ import itertools
 import logging
 import os
 
-import cairo
 import docopt
 import random
 import string
-import tkinter
 
 from color_modes import ColorMode
 from color_modes.gradient import GradientColorMode
@@ -42,33 +40,41 @@ from draw_modes.voronoi import VoronoiDrawMode
 from draw_modes.pattern import PatternDrawMode
 from draw_modes.hexagon import HexagonDrawMode
 
-from PIL import Image, ImageTk
-from models import FloatColor
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QAction, QImage, QKeySequence, QPainter, QPixmap
+from PySide6.QtWidgets import (
+    QApplication,
+    QLabel,
+    QMainWindow,
+    QScrollArea,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
+from models import FloatColor
 from models.input import InputParser, InputEvaluator
 
-class DrawUI(tkinter.Tk):
+POLL_INTERVAL_MS = 700
+
+
+class DrawUI(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.width, self.height = 1024, 1024
 
         self.inputFile = "input.conf"
-        self.geometry("{}x{}".format(self.width + 50, self.height + 50))
+        self.setWindowTitle("Code Art")
+        self.resize(self.width + 120, self.height + 120)
 
-        self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
-        self.context = cairo.Context(self.surface)
-        self.image: tkinter.Label = None
+        self.canvas = self._newCanvas()
         self.imagePrefix = ''.join(random.choice(string.ascii_lowercase+string.digits) for _ in range(8))
         self.imageCount = 0
+        self._image: QPixmap | None = None
 
+        self._buildToolbar()
+        self._buildContents()
         self._clearImage()
-
-        tkinter.Button(self, text="Generate", command=self.draw).grid(column=0, row=0)
-        tkinter.Button(self, text="Clear", command=self._clearImage).grid(column=1, row=0)
-        tkinter.Button(self, text="Save", command=self._saveImage).grid(column=2, row=0)
-
-        self.redraw = tkinter.BooleanVar(self, False)
-        tkinter.Checkbutton(self, text="Redraw", variable=self.redraw).grid(column=3, row=0)
 
         self.drawMode:DrawMode = None
         def SetDrawMode(drawMode:DrawMode):
@@ -81,13 +87,20 @@ class DrawUI(tkinter.Tk):
         def Draw():
             if not self.colorMode:
                 logging.error("Color mode unset, unable to draw")
+                self.statusBar().showMessage("Color mode unset, unable to draw")
                 return
 
             if not self.drawMode:
                 logging.error("Draw mode unset, unable to draw")
+                self.statusBar().showMessage("Draw mode unset, unable to draw")
                 return
 
-            self.drawMode.draw(self.context, self.colorMode, self.width, self.height)
+            painter = QPainter(self.canvas)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            try:
+                self.drawMode.draw(painter, self.colorMode, self.width, self.height)
+            finally:
+                painter.end()
 
         def parseTypes(input:str):
             if input.startswith("#") and (len(input) == 7 or len(input) == 9):
@@ -109,39 +122,105 @@ class DrawUI(tkinter.Tk):
         )
 
         self.inputModifiedTime:float = None
-        self.after(700, self._checkInput)
+        self._inputMissing = False
+        self._pollTimer = QTimer(self)
+        self._pollTimer.timeout.connect(self._checkInput)
+        self._pollTimer.start(0)
 
-    def _checkInput(self) -> None:
-        newModifiedTime = os.path.getmtime(self.inputFile)
-        fileChanged = self.inputModifiedTime == None or newModifiedTime > self.inputModifiedTime
-        self.inputModifiedTime = newModifiedTime
+    # --- UI construction -------------------------------------------------
 
-        existingDelay = 700
-        startTime = datetime.datetime.now()
-        if fileChanged or self.redraw.get():
-            self.draw()
-        existingDelay = existingDelay - int((datetime.datetime.now() - startTime).total_seconds() * 1000)
-        self.after(existingDelay, self._checkInput)
+    def _buildToolbar(self) -> None:
+        toolbar = QToolBar("Main", self)
+        toolbar.setMovable(False)
+        toolbar.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.addToolBar(toolbar)
+
+        generate = QAction("Generate", self)
+        generate.setShortcut(QKeySequence("Ctrl+R"))
+        generate.triggered.connect(self.draw)
+        toolbar.addAction(generate)
+
+        clear = QAction("Clear", self)
+        clear.setShortcut(QKeySequence("Ctrl+L"))
+        clear.triggered.connect(self._clearImage)
+        toolbar.addAction(clear)
+
+        save = QAction("Save", self)
+        save.setShortcut(QKeySequence.Save)
+        save.triggered.connect(self._saveImage)
+        toolbar.addAction(save)
+
+        toolbar.addSeparator()
+
+        self.redraw = QAction("Redraw", self)
+        self.redraw.setCheckable(True)
+        self.redraw.setChecked(False)
+        toolbar.addAction(self.redraw)
+
+    def _buildContents(self) -> None:
+        self.image = QLabel()
+        self.image.setAlignment(Qt.AlignCenter)
+        self.image.setMinimumSize(self.width // 4, self.height // 4)
+
+        self.imageArea = QScrollArea()
+        self.imageArea.setWidgetResizable(False)
+        self.imageArea.setAlignment(Qt.AlignCenter)
+        self.imageArea.setWidget(self.image)
+
+        contents = QWidget()
+        layout = QVBoxLayout(contents)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.addWidget(self.imageArea)
+        self.setCentralWidget(contents)
+
+    # --- Image handling --------------------------------------------------
+
+    def _newCanvas(self) -> QImage:
+        canvas = QImage(self.width, self.height, QImage.Format.Format_ARGB32_Premultiplied)
+        canvas.fill(Qt.GlobalColor.transparent)
+        return canvas
 
     def _clearImage(self):
-        self.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.width, self.height)
-        self.context = cairo.Context(self.surface)
+        self.canvas = self._newCanvas()
         self._setImage()
 
     def _setImage(self):
-        self._image_ref = ImageTk.PhotoImage(Image.frombuffer("RGBA", (self.width, self.height), self.surface.get_data().tobytes(), "raw", "BGRA", 0, 1))
-        self.image = tkinter.Label(self, image=self._image_ref)
-        self.image.grid(column=0, row=2, columnspan=10, rowspan=9)
+        self._image = QPixmap.fromImage(self.canvas)
+        self._showImage()
+
+    def _showImage(self):
+        if self._image is None:
+            return
+
+        scaled = self._image.scaled(
+            self.imageArea.viewport().size(),
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation,
+        )
+        self.image.setPixmap(scaled)
+        self.image.resize(scaled.size())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._showImage()
 
     def _saveImage(self):
-        self.surface.write_to_png(f"generated/{self.imagePrefix}_{self.imageCount}.png")
+        os.makedirs("generated", exist_ok=True)
+        path = f"generated/{self.imagePrefix}_{self.imageCount}.png"
+        if not self.canvas.save(path):
+            logging.error("Failed to save %s", path)
+            self.statusBar().showMessage(f"Failed to save {path}")
+            return
+
         self.imageCount += 1
+        logging.info("Saved %s", path)
+        self.statusBar().showMessage(f"Saved {path}")
+
+    # --- Generation ------------------------------------------------------
 
     def draw(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            if self.image:
-                self.image.destroy()
-
             with open(self.inputFile, mode='r') as stream:
                 tokens = InputParser.parse(stream)
 
@@ -151,14 +230,48 @@ class DrawUI(tkinter.Tk):
             logging.info("Draw took %f seconds", time_elapsed.total_seconds())
 
             self._setImage()
+            self.statusBar().showMessage(f"Generated in {time_elapsed.total_seconds():.3f}s")
         except Exception as ex:
             logging.exception(ex)
+            self.statusBar().showMessage(f"Draw failed: {ex}")
+        finally:
+            QApplication.restoreOverrideCursor()
+
+    # --- Input file watching ---------------------------------------------
+
+    def _checkInput(self) -> None:
+        startTime = datetime.datetime.now()
+
+        newModifiedTime = None
+        try:
+            newModifiedTime = os.path.getmtime(self.inputFile)
+        except OSError:
+            if not self._inputMissing:
+                self._inputMissing = True
+                logging.warning("Input file %s not found, waiting", self.inputFile)
+                self.statusBar().showMessage(f"Waiting for {self.inputFile}")
+
+        fileChanged = newModifiedTime is not None and (
+            self.inputModifiedTime is None or newModifiedTime > self.inputModifiedTime
+        )
+        self.inputModifiedTime = newModifiedTime
+        if newModifiedTime is not None:
+            self._inputMissing = False
+
+        if fileChanged or self.redraw.isChecked():
+            self.draw()
+
+        elapsedMs = (datetime.datetime.now() - startTime).total_seconds() * 1000
+        self._pollTimer.start(max(int(POLL_INTERVAL_MS - elapsedMs), 1))
+
 
 def main():
     arguments = docopt.docopt(__doc__, version='v0.0.0')
     logging.basicConfig(level=(logging.DEBUG if arguments['--verbose'] else logging.INFO))
+    app = QApplication([])
     window = DrawUI()
-    window.mainloop()
+    window.show()
+    app.exec()
 
 if __name__ == '__main__':
     main()

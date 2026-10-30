@@ -3,11 +3,11 @@
 ## Contribute
 
 ```sh
-python3.9 -m pip install requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
-### Mac
+Run the interface:
 
 ```sh
-brew install pkg-config py3cairo python-tk@3.9
+python3 gui.py
 ```

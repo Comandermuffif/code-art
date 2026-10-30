@@ -1,10 +1,10 @@
-import cairo
-
 from random import random
 from scipy.spatial import Voronoi
 
+from PySide6.QtGui import QPainter, QPainterPath
+
 from color_modes import ColorMode
-from draw_modes import DrawMode
+from draw_modes import DrawMode, fillAndStroke
 
 class VoronoiDrawMode(DrawMode):
     def __init__(self, count:int=3000):
@@ -21,14 +21,13 @@ class VoronoiDrawMode(DrawMode):
 
         self.voronoi = Voronoi(points)
 
-    def draw(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int) -> None:
+    def draw(self, painter:QPainter, color_mode:ColorMode, width:int, height:int) -> None:
         region_points = {
             self.voronoi.point_region[index]: self.voronoi.points[index]
             for index in range(len(self.voronoi.point_region))
         }
 
         # For every region
-        # for region in self.voronoi.regions:
         for region_index in range(len(self.voronoi.regions)):
             region = self.voronoi.regions[region_index]
             # If it is a closed region
@@ -39,20 +38,21 @@ class VoronoiDrawMode(DrawMode):
             if len(region) == 0:
                 continue
 
+            path = QPainterPath()
+
             # Move to the first point
             vertex = self.voronoi.vertices[region[0]]
-            context.move_to(vertex[0] * width, vertex[1] * height)
+            path.moveTo(vertex[0] * width, vertex[1] * height)
 
             for point_index in region[1:]:
                 vertex = self.voronoi.vertices[point_index]
                 # Draw a line to every other point
-                context.line_to(vertex[0] * width, vertex[1] * height)
+                path.lineTo(vertex[0] * width, vertex[1] * height)
 
-            context.close_path()
+            path.closeSubpath()
 
             # Get the point for the region
             point = region_points[region_index]
             color = color_mode.getColor(point[0], point[1])
-            context.set_source_rgba(*color.toTuple())
-            context.stroke_preserve()
-            context.fill()
+
+            fillAndStroke(painter, path, color)

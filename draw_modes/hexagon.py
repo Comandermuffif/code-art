@@ -1,9 +1,9 @@
-from math import ceil, floor
 import math
-import cairo
+
+from PySide6.QtGui import QPainter, QPainterPath
 
 from color_modes import ColorMode
-from draw_modes import DrawMode
+from draw_modes import DrawMode, toQColor
 from models import Point
 
 class HexagonDrawMode(DrawMode):
@@ -27,7 +27,7 @@ class HexagonDrawMode(DrawMode):
                 -math.sin(math.radians(30)) * offset.x + offset.y,
             )
 
-    def _drawHexagon(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int, offset:Point) -> None:
+    def _drawHexagon(self, painter:QPainter, color_mode:ColorMode, width:int, height:int, offset:Point) -> None:
         origin = self.origin * Point(width, height)
         scale = Point(width/self.count, height/self.count)
 
@@ -43,22 +43,22 @@ class HexagonDrawMode(DrawMode):
         ])
 
         # Start at the first point
-        context.move_to(*translatedPoints[0].as_tuple())
+        path = QPainterPath()
+        path.moveTo(*translatedPoints[0].as_tuple())
 
         # Line to every other point
         for point in translatedPoints[1:]:
-            context.line_to(*point.as_tuple())
+            path.lineTo(*point.as_tuple())
 
         # Close the shape
-        context.close_path()
+        path.closeSubpath()
 
         # Fill
         center = self.origin + offset/scale
-        context.set_source_rgba(*color_mode.getColor(*center.as_tuple()).toTuple())
-        context.fill()
+        painter.fillPath(path, toQColor(color_mode.getColor(*center.as_tuple())))
 
-    def draw(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int) -> None:
+    def draw(self, painter:QPainter, color_mode:ColorMode, width:int, height:int) -> None:
         # Draw the center hexagon
         for xOffset in range(-self.count, self.count):
             for yOffset in range(-self.count, self.count):
-                self._drawHexagon(context, color_mode, width, height, Point(xOffset, yOffset))
+                self._drawHexagon(painter, color_mode, width, height, Point(xOffset, yOffset))

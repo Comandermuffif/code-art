@@ -1,7 +1,7 @@
-import cairo
+from PySide6.QtGui import QPainter, QPainterPath
 
 from color_modes import ColorMode
-from draw_modes import DrawMode
+from draw_modes import DrawMode, fillAndStroke
 from models import Point
 
 class PatternDrawMode(DrawMode):
@@ -10,7 +10,7 @@ class PatternDrawMode(DrawMode):
         self.count = count
         self.center:Point = sum([Point(p[0], p[1]) for p in points], Point(0, 0)) * (1/len(points))
 
-    def draw(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int) -> None:
+    def draw(self, painter:QPainter, color_mode:ColorMode, width:int, height:int) -> None:
         xStep = width / self.count
         yStep = width / self.count
 
@@ -20,13 +20,14 @@ class PatternDrawMode(DrawMode):
                     (xCount + self.center.x)/self.count,
                     (yCount + self.center.y)/self.count
                 )
-                context.set_source_rgba(*color.toTuple())
 
+                path = QPainterPath()
                 for pointIndex in range(len(self.points)):
+                    point = (xCount + self.points[pointIndex][0]) * xStep, (yCount + self.points[pointIndex][1]) * yStep
                     if pointIndex == 0:
-                        context.move_to((xCount + self.points[pointIndex][0]) * xStep, (yCount + self.points[pointIndex][1]) * yStep)
+                        path.moveTo(*point)
                     else:
-                        context.line_to((xCount + self.points[pointIndex][0]) * xStep, (yCount + self.points[pointIndex][1]) * yStep)
-                context.close_path()
-                context.fill_preserve()
-                context.stroke()
+                        path.lineTo(*point)
+                path.closeSubpath()
+
+                fillAndStroke(painter, path, color)
