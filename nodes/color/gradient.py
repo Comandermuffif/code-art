@@ -22,8 +22,12 @@ class GradientColorMode(ColorMode):
     def getColor(self, x: float, y: float) -> FloatColor:
         buckets = len(self.colors)
         index = math.floor((x * buckets * self.weights[0] + y * buckets * self.weights[1]) / self.scale)
-        if (index == buckets):
-            return self.colors[-1]
+        # Sample coordinates are only nominally in [0, 1]: modifier nodes such as
+        # Normal jitter them with a normal distribution, so the computed index can
+        # land outside [0, buckets). Clamp rather than index blindly -- an index
+        # above buckets raises IndexError and a negative one silently wraps around
+        # to the end of the palette.
+        index = max(0, min(index, buckets - 1))
         return self.colors[index]
 
 

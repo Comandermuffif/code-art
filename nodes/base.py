@@ -168,6 +168,12 @@ def finalize_node_gui(node) -> None:
     host = node.custom_widget_host
     from PySide6.QtWidgets import QStyleFactory
     from PySide6.QtGui import QFont
+    # Define a dark theme stylesheet for high contrast readability
+    dark_style = "QWidget { background: transparent; color: #ffffff; }"
+    dark_style += "QLineEdit, QSpinBox, QDoubleSpinBox { background-color: #3a3a3a; color: #ffffff; border: 1px solid #555555; border-radius: 3px; padding: 2px 4px; }"
+    dark_style += "QCheckBox { color: #ffffff; }"
+    dark_style += "QPushButton { background-color: #3a3a3a; color: #ffffff; border: 1px solid #555555; padding: 4px 8px; }"
+    
     # setStyle takes ownership of the style object, so create a fresh one per
     # widget rather than sharing an instance.
     font = QFont("Arial", 10)
@@ -176,6 +182,7 @@ def finalize_node_gui(node) -> None:
     # propagation alone is fragile.
     host.setStyle(QStyleFactory.create("Fusion"))
     host.setFont(font)
+    host.setStyleSheet(dark_style)
     for widget in node.gui_widgets.values():
         widget.setStyle(QStyleFactory.create("Fusion"))
         widget.setFont(font)
