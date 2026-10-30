@@ -47,7 +47,7 @@ class NodeDef:
 
 
 # Menu ordering for node categories (unknown categories sort last).
-CATEGORY_ORDER: list[str] = ["Color", "Palette", "Color Modifier", "Draw", "Output"]
+CATEGORY_ORDER: list[str] = ["Color", "Palette", "Color Modifier", "Draw", "Composite", "Output"]
 
 
 # --- Code generation ---------------------------------------------------------
