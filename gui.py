@@ -19,26 +19,9 @@ import random
 import string
 
 from color_modes import ColorMode
-from color_modes.gradient import GradientColorMode
-from color_modes.grid import GridColorMode
-from color_modes.linear_gradient import LinearGradientColorMode
-from color_modes.polygon import PolygonColorMode
-from color_modes.random import RandomColorMode
-from color_modes.modify.clamp import ClampColorMode
-from color_modes.modify.normal import NormalColorMode
-from color_modes.modify.transform import TransformColorMode
-from color_modes.modify.avg import AvgColorMode
-from color_modes.arc import ArcColorMode
-from color_modes.modify.globe import GlobeColorMode
-from color_modes.modify.voronoi import VoronoiColorMode
-
 from draw_modes import DrawMode
-from draw_modes.circles import CirclesDrawMode
-from draw_modes.squares import SquaresDrawMode
-from draw_modes.triangles import TrianglesDrawMode
-from draw_modes.voronoi import VoronoiDrawMode
-from draw_modes.pattern import PatternDrawMode
-from draw_modes.hexagon import HexagonDrawMode
+
+from modes import colorModeClasses, discover, drawModeClasses
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction, QImage, QKeySequence, QPainter, QPixmap
@@ -106,10 +89,14 @@ class DrawUI(QMainWindow):
             if input.startswith("#") and (len(input) == 7 or len(input) == 9):
                 return FloatColor.fromHex(input)
 
+        # Import every colour/draw mode module once so their classes register
+        # themselves with ColorMode/DrawMode.__subclasses__()
+        discover()
+
         self.parser = InputEvaluator(
             itertools.chain(
-                DrawMode.__subclasses__(),
-                ColorMode.__subclasses__(),
+                drawModeClasses(),
+                colorModeClasses(),
                 [
                     SetDrawMode,
                     SetColorMode,
