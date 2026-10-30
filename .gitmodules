@@ -1,0 +1,3 @@
+[submodule "vendor/pyflowgraph"]
+	path = vendor/pyflowgraph
+	url = https://github.com/bhowiebkr/PyFlowGraph.git

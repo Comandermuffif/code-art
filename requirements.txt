@@ -1,4 +1,3 @@
-docopt
-pycairo
+PySide6
 scipy
-pillow
+markdown-it-py

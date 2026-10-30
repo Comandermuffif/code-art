@@ -1,5 +1,6 @@
+.DS_Store
 .vscode
+.venv
 generated
 __pycache__
-input*
-test_generate_input.py
+*.pyc

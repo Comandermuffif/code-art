@@ -1,13 +1,88 @@
 # Code Art
 
-## Contribute
+A node-based generative-art editor. Build an image by wiring together
+**color-mode** nodes (which produce a color field) and **draw-mode** nodes
+(which sample a color field and paint it). The editor is built on
+[PyFlowGraph](https://github.com/bhowiebkr/PyFlowGraph), a PySide6 node editor
+where every node is a small Python function ("code as nodes").
+
+Rendering uses Qt (`QPainter` / `QImage`); graphs are saved and loaded as
+human-readable Markdown (`.md`).
+
+## Setup
 
 ```sh
-python3.9 -m pip install requirements.txt
+git clone --recursive <this-repo>
+cd code-art
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### Mac
+If you already cloned without `--recursive`, fetch the editor dependency with:
 
 ```sh
-brew install pkg-config py3cairo python-tk@3.9
+git submodule update --init --recursive
+```
+
+[PyFlowGraph](https://github.com/bhowiebkr/PyFlowGraph) (MIT licensed) is
+included as a git submodule at `vendor/pyflowgraph`; the editor imports it from
+`vendor/pyflowgraph/src`.
+
+## Run
+
+```sh
+python app.py
+```
+
+- **Add nodes**: use the *Nodes* menu (grouped by category), or right-click the
+  canvas → *Add Node*.
+- **Wire nodes**: drag from an output pin (right) to an input pin (left). A node
+  needs both a data connection (e.g. color field → draw node) and an execution
+  connection (the thin exec pins) so it runs in order.
+- **Delete**: select nodes and/or edges and press `Delete` (or `Backspace`), or
+  use *Edit → Delete*. Deletions are undoable with `Ctrl+Z` / `Ctrl+Shift+Z`.
+- **Execute**: press `F5` (or *Run → Execute Graph*). Draw nodes show the rendered
+  image in an inline preview.
+- **Save / Load**: *File → Save/Load* writes/reads a `.md` graph.
+
+## Nodes
+
+- **Color** sources: Gradient, Grid, Random, Arc, Linear Gradient. Each builds a
+  real `ColorMode` object and passes it downstream by reference. The palettized
+  ones (Gradient, Grid, Random, Arc) take a `colors` list as an input pin.
+- **Palette**: Palette (parses a comma-separated hex string like
+  `#ff0000,#00ff00,#0000ff` into a list of colors), Subset (slice the list),
+  Get Subcolors (interpolate shades between palette colors). Chain these to
+  modify a color list before it reaches a color mode.
+- **Color Modifier**: Clamp, Invert, Transform, Globe, Normal, Voronoi, Average.
+  These wrap a child color mode.
+- **Draw**: Circles, Squares, Triangles, Hexagon, Pattern, Voronoi. Each samples
+  its input color field and renders a `QImage` preview.
+- **Output**: Save Image. Takes a draw node's `image` output and writes it to
+  disk on execute — set the path in the widget or via *Browse...*; the format is
+  inferred from the extension (`.png`, `.jpg`).
+
+## Layout
+
+- `app.py` — the editor window (embeds the PyFlowGraph scene/view).
+- `nodes/` — the node library, one node per file:
+  - `nodes/base.py` — shared `NodeDef`/`Widget` structures, GUI-code generation,
+    and the `add_node` helper.
+  - `nodes/color/` — color-source nodes (implementation + node definition in
+    each file).
+  - `nodes/palette/` — color-list nodes (parse hex strings, slice and
+    interpolate color lists).
+  - `nodes/modify/` — color-modifier nodes.
+  - `nodes/draw/` — draw-mode nodes (QPainter ports of the old cairo draw
+    modes) with `_render.py` holding the shared rendering helpers.
+  - `nodes/output/` — output nodes (write the final image to disk).
+- `models/` — shared data types (`FloatColor`, `Point`).
+- `make_example.py` — writes a sample graph to `examples/demo.md`.
+- `vendor/pyflowgraph/` — PyFlowGraph (git submodule).
+
+## Contributing
+
+```sh
+python make_example.py   # regenerate examples/demo.md
 ```
