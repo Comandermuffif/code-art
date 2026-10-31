@@ -85,6 +85,9 @@ class DrawUI(QMainWindow):
             finally:
                 painter.end()
 
+        def Clear():
+            self._clearImage()
+
         def parseTypes(input:str):
             if input.startswith("#") and (len(input) == 7 or len(input) == 9):
                 return FloatColor.fromHex(input)
@@ -103,6 +106,7 @@ class DrawUI(QMainWindow):
                     Draw,
                     FloatColor.getSubcolors,
                     self._saveImage,
+                    Clear,
                 ]
             ),
             parseTypes
