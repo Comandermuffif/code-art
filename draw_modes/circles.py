@@ -1,8 +1,10 @@
 import random
-import cairo
+
+from PySide6.QtCore import QPointF, Qt
+from PySide6.QtGui import QPainter
 
 from color_modes import ColorMode
-from draw_modes import DrawMode
+from draw_modes import DrawMode, toQColor
 
 class CirclesDrawMode(DrawMode):
     def __init__(self, count:int=500, minSize:int=0, maxSize:int=50):
@@ -10,7 +12,9 @@ class CirclesDrawMode(DrawMode):
         self.minSize = minSize
         self.maxSize = maxSize
 
-    def draw(self, context:cairo.Context, color_mode:ColorMode, width:int, height:int) -> None:
+    def draw(self, painter:QPainter, color_mode:ColorMode, width:int, height:int) -> None:
+        painter.setPen(Qt.PenStyle.NoPen)
+
         for _ in range(self.count):
             x = random.random()
             y = random.random()
@@ -22,6 +26,5 @@ class CirclesDrawMode(DrawMode):
 
             radious = random.random() * (self.maxSize - self.minSize) + self.minSize
 
-            context.set_source_rgba(*color.toTuple())
-            context.arc(x, y, radious, 0, 360)
-            context.fill()
+            painter.setBrush(toQColor(color))
+            painter.drawEllipse(QPointF(x, y), radious, radious)

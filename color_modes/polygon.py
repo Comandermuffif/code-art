@@ -1,7 +1,7 @@
 from scipy.spatial import Delaunay
 
 from color_modes import ColorMode
-from models import FloatColor, Point
+from models import FloatColor
 
 class PolygonColorMode(ColorMode):
     def __init__(self, polygons:list[tuple[ColorMode|FloatColor, list[tuple[float, float]]]]):
