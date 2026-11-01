@@ -1,11 +1,12 @@
 from math import cos, radians, sin
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPointF, Qt, QVariantAnimation
 from PySide6.QtGui import QImage, QPainter, QPainterPath, QPen, QPixmap
-from PySide6.QtWidgets import QApplication, QLabel, QMainWindow
+from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget
 
 from color_modes import ColorMode
 from color_modes.arc import ArcColorMode
+from color_modes.gradient import GradientColorMode
 from color_modes.modify.normal import NormalColorMode
 from color_modes.polygon import PolygonColorMode
 from color_modes.random import RandomColorMode
@@ -13,78 +14,90 @@ from draw_modes import DrawMode, toQColor
 from draw_modes.circles import CirclesDrawMode
 from draw_modes.squares import SquaresDrawMode
 from models import FloatColor
-from random import shuffle
+from random import randint, random, shuffle
 
 
-class PathDrawMode(DrawMode):
-    def __init__(self, points:list[tuple[float, float]]):
-        self.points = points
+class Circle():
+    def __init__(self, colorMode:ColorMode):
+        self.x = random()
+        self.y = random()
+        self.color = toQColor(colorMode.getColor(self.x, self.y))
 
-    def draw(self, painter:QPainter, colorMode:ColorMode):
-        width = painter.viewport().width()
-        height = painter.viewport().height()
-        
-        path = QPainterPath()
-        path.moveTo(self.points[0][0] * width, self.points[0][1] * height)
-        for point in self.points:
-            path.lineTo(point[0] * width, point[1] * height)
-        path.closeSubpath()
+        self.minRadious = 10
+        self.maxRadious = 50
+        self.radious = random() * (self.maxRadious - self.minRadious) + self.minRadious
 
-        pen = QPen(toQColor(FloatColor(0, 0, 0)), 5)
-        pen.setCapStyle(Qt.PenCapStyle.FlatCap)
-        pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
-        painter.strokePath(path, pen)
+    def draw(self, painter: QPainter) -> None:
+        width = painter.window().width()
+        height = painter.window().height()
+
+        painter.setBrush(self.color)
+        painter.drawEllipse(QPointF(self.x * width, self.y * height), self.radious, self.radious)
 
 
-def genCirclePoints(center:tuple[float,float], radious:float, segments=20) -> list[tuple[float, float]]:
-    return list([
-        (
-            center[0] + cos(radians(360 * (float(x)/segments))) * radious,
-            center[1] + sin(radians(360 * (float(x)/segments))) * radious
-        ) for x in range(segments)
-    ])
+class WiggleCircle(Circle):
+    def __init__(self, colorMode:ColorMode):
+        super().__init__(colorMode)
+        self.xOrigin = self.x
+        self.yOrigin = self.y
+
+        self.xOffset = 0
+        self.yOffset = 0
+
+        self.maxOffset = 0.05
+
+        moveSpeed = 0.001
+        self.xSpeed = random() * moveSpeed - (moveSpeed/2)
+        self.ySpeed = random() * moveSpeed - (moveSpeed/2)
+
+    def draw(self, painter: QPainter) -> None:
+        self.xOffset += self.xSpeed
+        self.yOffset += self.ySpeed
+
+        self.x = self.xOrigin + self.xOffset
+        self.y = self.yOrigin + self.yOffset
+
+        if abs(self.xOffset) > self.maxOffset:
+            self.xSpeed *= -1
+        if abs(self.yOffset) > self.maxOffset:
+            self.ySpeed *= -1
+
+        super().draw(painter)
+
+
+class ArcWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        colorMode = GradientColorMode(FloatColor.getSubcolors(FloatColor.fromHexList("#eaac43,#ea4c65,#1a2431,#57a37d,#cace9d,#527157"), 7, True))
+
+        self.circles = list([
+            WiggleCircle(colorMode) for _ in range(1000)
+        ])
+
+        self.anim = QVariantAnimation(self, duration=1000)
+        self.anim.setStartValue(0)
+        self.anim.setEndValue(360)
+        self.anim.valueChanged.connect(self.update)
+        self.anim.start()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+
+        for c in self.circles:
+            c.draw(painter)
+
+        if self.anim.currentValue() == self.anim.endValue():
+            self.anim.start()
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
-        super().__init__()
-        self.title = "Code Art"
-        self.setWindowTitle(self.title)
-
-        # Create the canvas
-        canvas = QImage(1024, 1024, QImage.Format.Format_ARGB32_Premultiplied)
-        canvas.fill(Qt.GlobalColor.transparent)
-
-        # Create the painter
-        painter = QPainter(canvas)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
-        # Create our color pallete
-        pallete = FloatColor.fromHexList("#eaac43,#ea4c65,#1a2431,#57a37d,#cace9d,#527157,#ff0000,#ffa500,#ffff00,#008000,#0000ff,#4b0082,#ee82ee,#02d7f2,#f2e900,#007aff,#ff1111,#000000,#ffbe0b,#fb5607,#ff006e,#8338ec,#3a86ff")
-        shuffle(pallete)
-        pallete = pallete[0:3]
-        # pallete = FloatColor.fromHexList("#eaac43,#ea4c65,#1a2431,#57a37d,#cace9d,#527157")
-        pallete = FloatColor.getSubcolors(pallete, 7, True)
-
-        # Draw our content
-        SquaresDrawMode(1).draw(painter, RandomColorMode([FloatColor(1, 1, 1, 1)]), 1024, 1024)
-        CirclesDrawMode().draw(painter, PolygonColorMode([
-                (FloatColor(0, 0, 0, 0), [(0.3, 1.0), (0.7, 1.0), (0.5, 0.5)]),
-                (NormalColorMode(ArcColorMode(pallete), 0.0, 0.0), genCirclePoints((0.5, 0.5), 0.45)),
-            ]),
-            1024,
-            1024,
-        )
-
-        # Create a widget so we can view it
-        painter.end()
-        image = QPixmap.fromImage(canvas)
-        label = QLabel()
-
-        # Add to window
-        label.setPixmap(image)
-        self.setCentralWidget(label)
-        self.resize(image.width(), image.height())
+        super(MainWindow, self).__init__()
+        self.setWindowTitle("AnimateArc")
+        self.setGeometry(100, 100, 600, 600)
+        self.arcWidget = ArcWidget()
+        self.setCentralWidget(self.arcWidget)
 
 
 if __name__ == '__main__':
