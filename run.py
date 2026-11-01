@@ -22,6 +22,7 @@ class Circle():
         self.x = random()
         self.y = random()
         self.color = toQColor(colorMode.getColor(self.x, self.y))
+        self.color.setAlphaF(random())
 
         self.minRadious = 10
         self.maxRadious = 50
@@ -31,6 +32,7 @@ class Circle():
         width = painter.window().width()
         height = painter.window().height()
 
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(self.color)
         painter.drawEllipse(QPointF(self.x * width, self.y * height), self.radious, self.radious)
 
@@ -72,7 +74,7 @@ class ArcWidget(QWidget):
         colorMode = GradientColorMode(FloatColor.getSubcolors(FloatColor.fromHexList("#eaac43,#ea4c65,#1a2431,#57a37d,#cace9d,#527157"), 7, True))
 
         self.circles = list([
-            WiggleCircle(colorMode) for _ in range(1000)
+            WiggleCircle(colorMode) for _ in range(2000)
         ])
 
         self.anim = QVariantAnimation(self, duration=1000)
@@ -95,7 +97,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setWindowTitle("AnimateArc")
-        self.setGeometry(100, 100, 600, 600)
+        self.setGeometry(100, 100, 1124, 1124)
         self.arcWidget = ArcWidget()
         self.setCentralWidget(self.arcWidget)
 
