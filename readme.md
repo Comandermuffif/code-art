@@ -16,6 +16,8 @@ python3 gui.py
 
 A sample config that has a colored donut on a transparent background
 
+![Sample](docs/media/5mrzr878_2.png)
+
 ```conf
 # Prevent transparents from overlapping during redraws
 Clear()
